@@ -43,6 +43,25 @@ struct ContentView: View {
         }
     }
 
+    private func calculateAngle() -> Double {
+        let remainingCharacters = 45 - text.count
+        return Double(remainingCharacters) * (360.0 / 45.0)
+    }
+
+    private func calculateProgress() -> Double {
+        let remainingCharacters = 45 - text.count
+        return Double(remainingCharacters) / 45.0
+    }
+
+    private var remainingCharacters: Int {
+        return 45 - text.count
+    }
+
+    private var borderWidth: CGFloat {
+        let remainingCharacters = 45 - text.count
+        return CGFloat(remainingCharacters) / 10
+    }
+
     var body: some View {
         
         
@@ -68,26 +87,43 @@ struct ContentView: View {
                     .padding(.top, 60)
                
                 // Input field
-                TextField("Who's turn is it?", text: $text)
-                    
-                    .font(.title3)
-                    .fontDesign(.rounded)
-                    .fontWeight(.semibold)
-                    .multilineTextAlignment(.center)
-                    .padding(.vertical, 16)
-                    .padding(.horizontal, 24)
-                    .background(Color.white)
-                    .clipShape(Capsule())
-                    .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-                    .onChange(of: text, initial: false) { oldValue, newValue in
-                        // Limit to 45 characters and validate for letters only
-                        if newValue.count > 45 {
-                            text = String(newValue.prefix(45))
+                VStack(spacing: 0) {
+                    TextField("Who's turn is it?", text: $text)
+                        .font(.title3)
+                        .fontDesign(.rounded)
+                        .fontWeight(.semibold)
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 16)
+                        .padding(.horizontal, 24)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                        .overlay(
+                            Capsule()
+                                .trim(from: 0, to: Double(45 - text.count) / 45.0)
+                                .stroke(
+                                    LinearGradient(colors: [.orange, .red],
+                                                 startPoint: .leading,
+                                                 endPoint: .trailing),
+                                    style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                                )
+                        )
+                        .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                        .onChange(of: text, initial: false) { oldValue, newValue in
+                            // Only accept new input if under 45 characters
+                            if oldValue.count >= 45 && newValue.count > oldValue.count {
+                                text = oldValue
+                                return
+                            }
+                            
+                            // Remove any non-letter characters
+                            text = newValue.filter { $0.isLetter }
                         }
-                        
-                        // Remove any non-letter characters
-                        text = newValue.filter { $0.isLetter }
-                    }
+                        .animation(.smooth, value: text)
+                    
+                    // Character counter
+                    
+                }
+                .padding(.bottom, 0)
                 
                 Spacer()
                 
