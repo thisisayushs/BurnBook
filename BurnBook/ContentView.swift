@@ -5,6 +5,8 @@ struct ContentView: View {
     
     @State private var text: String = ""
     @State private var engine: CHHapticEngine?
+    
+    
     private func validateInput(_ string: String) -> Bool {
         let letterCharacterSet = CharacterSet.letters
         let stringCharacterSet = CharacterSet(charactersIn: string)
@@ -64,9 +66,10 @@ struct ContentView: View {
                     )
                     .shadow(radius: 2)
                     .padding(.top, 60)
-                Spacer()
+               
                 // Input field
                 TextField("Who's turn is it?", text: $text)
+                    
                     .font(.title3)
                     .fontDesign(.rounded)
                     .fontWeight(.semibold)
@@ -87,6 +90,17 @@ struct ContentView: View {
                     }
                 
                 Spacer()
+                
+                
+                
+                
+                
+            }
+            .padding(.bottom, 150)
+            .padding(.horizontal, 30)
+            
+            
+            VStack{
                 Spacer()
                 // Roast button
                 Button(action: {
@@ -101,17 +115,18 @@ struct ContentView: View {
                             LinearGradient(colors: [.orange, .red],
                                          startPoint: .leading,
                                          endPoint: .trailing)
+                                .opacity(text.isEmpty ? 0.5 : 1)
                         )
                         .clipShape(Capsule())
                         .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
                 }
+                .disabled(text.isEmpty)
                 .padding(.top, 20)
-                
-                
-                
             }
             .padding(.horizontal, 30)
+
         }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
         .onAppear {
             prepareHaptics()
         }
