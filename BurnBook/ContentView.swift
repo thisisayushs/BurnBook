@@ -13,10 +13,6 @@ struct ContentView: View {
         return stringCharacterSet.isSubset(of: letterCharacterSet)
     }
     
-    
-
-   
-
     private func calculateAngle() -> Double {
         let remainingCharacters = 45 - text.count
         return Double(remainingCharacters) * (360.0 / 45.0)
