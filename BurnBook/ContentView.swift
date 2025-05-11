@@ -1,10 +1,10 @@
 import SwiftUI
-import CoreHaptics
+
 
 struct ContentView: View {
     
     @State private var text: String = ""
-    @State private var engine: CHHapticEngine?
+    
     @State private var navigateToResult = false
     
     private func validateInput(_ string: String) -> Bool {
@@ -13,35 +13,9 @@ struct ContentView: View {
         return stringCharacterSet.isSubset(of: letterCharacterSet)
     }
     
-    func prepareHaptics() {
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-        
-        do {
-            engine = try CHHapticEngine()
-            try engine?.start()
-        } catch {
-            print("There was an error creating the engine: \(error.localizedDescription)")
-        }
-    }
+    
 
-    func complexSuccess() {
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-        
-        var events = [CHHapticEvent]()
-        
-        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1.0)
-        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 1.0)
-        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
-        events.append(event)
-        
-        do {
-            let pattern = try CHHapticPattern(events: events, parameters: [])
-            let player = try engine?.makePlayer(with: pattern)
-            try player?.start(atTime: 0)
-        } catch {
-            print("Failed to play pattern: \(error.localizedDescription)")
-        }
-    }
+   
 
     private func calculateAngle() -> Double {
         let remainingCharacters = 45 - text.count
@@ -141,7 +115,7 @@ struct ContentView: View {
                     Spacer()
                     // Roast button
                     Button(action: {
-                        complexSuccess()
+                        
                         navigateToResult = true
                     }) {
                         Text("Roast It")
@@ -169,9 +143,7 @@ struct ContentView: View {
                     .navigationBarBackButtonHidden()
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
-            .onAppear {
-                prepareHaptics()
-            }
+            
         }
     }
 }
