@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8212F5A52DDBBC8700F01F6C /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = 8212F5A42DDBBC8700F01F6C /* MLX */; };
+		8212F5A82DDBBCD200F01F6C /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = 8212F5A72DDBBCD200F01F6C /* MLXLLM */; };
+		8212F5AA2DDBBCD200F01F6C /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 8212F5A92DDBBCD200F01F6C /* MLXLMCommon */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		282468052D83134E006E36D6 /* BurnBook.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BurnBook.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +29,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8212F5A82DDBBCD200F01F6C /* MLXLLM in Frameworks */,
+				8212F5AA2DDBBCD200F01F6C /* MLXLMCommon in Frameworks */,
+				8212F5A52DDBBC8700F01F6C /* MLX in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +74,9 @@
 			);
 			name = BurnBook;
 			packageProductDependencies = (
+				8212F5A42DDBBC8700F01F6C /* MLX */,
+				8212F5A72DDBBCD200F01F6C /* MLXLLM */,
+				8212F5A92DDBBCD200F01F6C /* MLXLMCommon */,
 			);
 			productName = BurnBook;
 			productReference = 282468052D83134E006E36D6 /* BurnBook.app */;
@@ -94,6 +106,10 @@
 			);
 			mainGroup = 282467FC2D83134E006E36D6;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8212F5A32DDBBC8700F01F6C /* XCRemoteSwiftPackageReference "mlx-swift" */,
+				8212F5A62DDBBCD200F01F6C /* XCRemoteSwiftPackageReference "mlx-swift-examples" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 282468062D83134E006E36D6 /* Products */;
 			projectDirPath = "";
@@ -336,6 +352,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		8212F5A32DDBBC8700F01F6C /* XCRemoteSwiftPackageReference "mlx-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.25.3;
+			};
+		};
+		8212F5A62DDBBCD200F01F6C /* XCRemoteSwiftPackageReference "mlx-swift-examples" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-examples";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.21.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8212F5A42DDBBC8700F01F6C /* MLX */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8212F5A32DDBBC8700F01F6C /* XCRemoteSwiftPackageReference "mlx-swift" */;
+			productName = MLX;
+		};
+		8212F5A72DDBBCD200F01F6C /* MLXLLM */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8212F5A62DDBBCD200F01F6C /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLLM;
+		};
+		8212F5A92DDBBCD200F01F6C /* MLXLMCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8212F5A62DDBBCD200F01F6C /* XCRemoteSwiftPackageReference "mlx-swift-examples" */;
+			productName = MLXLMCommon;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 282467FD2D83134E006E36D6 /* Project object */;
 }

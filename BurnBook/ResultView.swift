@@ -8,8 +8,13 @@
 import SwiftUI
 
 struct ResultView: View {
-    let name: String
+    
     @Environment(\.dismiss) private var dismiss
+    
+    let nameToRoast: String
+    @ObservedObject var evaluator: LLMEvaluator // Use @ObservedObject to observe changes
+    
+    @State private var currentRoast: String = "Roasting..."
     
     var body: some View {
         ZStack {
@@ -26,13 +31,15 @@ struct ResultView: View {
                         .shadow(color: .black.opacity(0.1), radius: 5)
                         .padding()
                     
-                    Text("Cats? More like a furry disaster with claws and an attitude problem.")
+                    Text(evaluator.running ? "Roasting..." : (currentRoast.isEmpty && !evaluator.output.isEmpty ? evaluator.output : currentRoast) )
                         .italic()
                         .fontWeight(.semibold)
                         .padding(40)
                         .foregroundStyle(LinearGradient(colors: [.orange, .red],
                                                         startPoint: .leading,
                                                         endPoint: .trailing))
+                        .animation(.easeInOut, value: evaluator.running)
+                        .animation(.easeInOut, value: currentRoast)
                         
                 }
                 VStack {
@@ -78,9 +85,36 @@ struct ResultView: View {
                 
             }
         }
+        .task {
+            // Ensure evaluator.output is cleared or set to a loading state before generating
+            // If evaluator.output holds a previous roast, it might flash briefly.
+            // Consider if evaluator.output should be reset by ContentView or here.
+            // For now, we'll rely on the "Roasting..." text from currentRoast.
+            if currentRoast == "Roasting..." { // Only generate if not already generated or in progress
+                await evaluator.generate(prompt: nameToRoast)
+                // This ensures that if the view is dismissed and reopened for the same roast,
+                // it doesn't re-trigger generation if evaluator.output is already populated.
+                if !evaluator.output.isEmpty && !evaluator.output.contains("Error:") {
+                    self.currentRoast = evaluator.output
+                } else if evaluator.output.contains("Error:") {
+                    self.currentRoast = evaluator.output // Show the error
+                } else {
+                    self.currentRoast = "Couldn't think of a roast!" // Fallback
+                }
+            } else if !evaluator.output.isEmpty && currentRoast != evaluator.output {
+                // If there's already an output from a previous generation (e.g. due to quick re-navigation)
+                // and it's different from what ResultView currently shows, update it.
+                self.currentRoast = evaluator.output
+            }
+        }
+        .onChange(of: evaluator.output) { _, newOutput in
+            if !evaluator.running && !newOutput.isEmpty {
+                 self.currentRoast = newOutput
+            }
+        }
     }
 }
 
 #Preview {
-    ResultView(name: "Test Name")
+    ResultView(nameToRoast: "Test Name", evaluator: LLMEvaluator())
 }

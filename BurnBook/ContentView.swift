@@ -1,11 +1,37 @@
 import SwiftUI
 
+struct LoadingView: View {
+    let message: String
+    
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.orange.opacity(0.15), .red.opacity(0.15)],
+                           startPoint: .topLeading,
+                           endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                    .scaleEffect(1.5)
+                Text(message)
+                    .font(.headline)
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+            }
+        }
+    }
+}
 
 struct ContentView: View {
     
     @State private var text: String = ""
-    
+    @StateObject var evaluator = LLMEvaluator()
     @State private var navigateToResult = false
+    
+    @State private var isModelReady = false
+    @State private var loadingMessage = "Warming up the Burns..."
     
     private func validateInput(_ string: String) -> Bool {
         let letterCharacterSet = CharacterSet.letters
@@ -33,113 +59,122 @@ struct ContentView: View {
     }
 
     var body: some View {
-        
-        
-        NavigationStack {
-            ZStack {
-                // Background gradient
-                LinearGradient(colors: [.orange.opacity(0.15), .red.opacity(0.15)],
-                               startPoint: .topLeading,
-                               endPoint: .bottomTrailing)
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 40) {
-                    Spacer()
-                    
-                    // Title
-                    Text("Burn Book")
-                        .font(.system(size: 52, weight: .heavy, design: .rounded))
-                        .foregroundStyle(
-                            LinearGradient(colors: [.orange, .red],
-                                         startPoint: .topLeading,
-                                         endPoint: .bottomTrailing)
-                        )
-                        .shadow(radius: 2)
-                        .padding(.top, 60)
-                   
-                    // Input field
-                    VStack(spacing: 0) {
-                        TextField("Who's turn is it?", text: $text)
-                            .font(.title3)
-                            .fontDesign(.rounded)
-                            .fontWeight(.semibold)
-                            .multilineTextAlignment(.center)
-                            .padding(.vertical, 16)
-                            .padding(.horizontal, 24)
-                            .background(Color.white)
-                            .clipShape(Capsule())
-                            .overlay(
-                                Capsule()
-                                    .trim(from: 0, to: Double(45 - text.count) / 45.0)
-                                    .stroke(
+        Group {
+            if !isModelReady {
+                LoadingView(message: loadingMessage)
+            } else {
+                NavigationStack {
+                    ZStack {
+                        // Background gradient
+                        LinearGradient(colors: [.orange.opacity(0.15), .red.opacity(0.15)],
+                                       startPoint: .topLeading,
+                                       endPoint: .bottomTrailing)
+                            .ignoresSafeArea()
+                        
+                        VStack(spacing: 40) {
+                            Spacer()
+                            
+                            // Title
+                            Text("Burn Book")
+                                .font(.system(size: 52, weight: .heavy, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(colors: [.orange, .red],
+                                                 startPoint: .topLeading,
+                                                 endPoint: .bottomTrailing)
+                                )
+                                .shadow(radius: 2)
+                                .padding(.top, 60)
+                           
+                            // Input field
+                            VStack(spacing: 0) {
+                                TextField("Who's turn is it?", text: $text)
+                                    .font(.title3)
+                                    .fontDesign(.rounded)
+                                    .fontWeight(.semibold)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.vertical, 16)
+                                    .padding(.horizontal, 24)
+                                    .background(Color.white)
+                                    .clipShape(Capsule())
+                                    .overlay(
+                                        Capsule()
+                                            .trim(from: 0, to: Double(45 - text.count) / 45.0)
+                                            .stroke(
+                                                LinearGradient(colors: [.orange, .red],
+                                                             startPoint: .leading,
+                                                             endPoint: .trailing),
+                                                style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                                            )
+                                    )
+                                    .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                                    .onChange(of: text, initial: false) { oldValue, newValue in
+                                        if oldValue.count >= 45 && newValue.count > oldValue.count {
+                                            text = oldValue
+                                            return
+                                        }
+                                        text = newValue.filter { $0.isLetter }
+                                    }
+                                    .animation(.smooth, value: text)
+                                
+                            }
+                            .padding(.bottom, 0)
+                            
+                            Spacer()
+                        }
+                        .padding(.bottom, 150)
+                        .padding(.horizontal, 30)
+                        
+                        VStack{
+                            Spacer()
+                            Button(action: {
+                                self.navigateToResult = true
+                            }) {
+                                Text("Roast It")
+                                    .font(.system(size: 28, weight: .black, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 20)
+                                    .background(
                                         LinearGradient(colors: [.orange, .red],
                                                      startPoint: .leading,
-                                                     endPoint: .trailing),
-                                        style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                                                     endPoint: .trailing)
+                                            .opacity(text.isEmpty ? 0.5 : 1)
                                     )
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-                            .onChange(of: text, initial: false) { oldValue, newValue in
-                                // Only accept new input if under 45 characters
-                                if oldValue.count >= 45 && newValue.count > oldValue.count {
-                                    text = oldValue
-                                    return
-                                }
-                                
-                                // Remove any non-letter characters
-                                text = newValue.filter { $0.isLetter }
+                                    .clipShape(Capsule())
+                                    .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
                             }
-                            .animation(.smooth, value: text)
-                        
-                        // Character counter
-                        
-                    }
-                    .padding(.bottom, 0)
-                    
-                    Spacer()
-                    
-                    
-                    
-                    
-                    
-                }
-                .padding(.bottom, 150)
-                .padding(.horizontal, 30)
-                
-                
-                VStack{
-                    Spacer()
-                    // Roast button
-                    Button(action: {
-                        
-                        navigateToResult = true
-                    }) {
-                        Text("Roast It")
-                            .font(.system(size: 28, weight: .black, design: .rounded))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 20)
-                            .background(
-                                LinearGradient(colors: [.orange, .red],
-                                             startPoint: .leading,
-                                             endPoint: .trailing)
-                                    .opacity(text.isEmpty ? 0.5 : 1)
-                            )
-                            .clipShape(Capsule())
-                            .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
-                    }
-                    .disabled(text.isEmpty)
-                    .padding(.top, 20)
-                }
-                .padding(.horizontal, 30)
+                            .disabled(text.isEmpty)
+                            .padding(.top, 20)
+                        }
+                        .padding(.horizontal, 30)
 
+                    }
+                    .navigationDestination(isPresented: $navigateToResult) {
+                        ResultView(nameToRoast: text, evaluator: evaluator)
+                            .navigationBarBackButtonHidden()
+                    }
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
+                }
             }
-            .navigationDestination(isPresented: $navigateToResult) {
-                ResultView(name: text)
-                    .navigationBarBackButtonHidden()
+        }
+        .onAppear {
+            if !isModelReady {
+                Task {
+                    loadingMessage = "Downloading AI Model (this might take a moment on first launch)..."
+                    let setupSuccess = await evaluator.setupModel()
+                    if setupSuccess {
+                        isModelReady = true
+                    } else {
+                        loadingMessage = "Failed to set up AI Model. \(evaluator.output) Please restart the app or check your connection."
+                    }
+                }
             }
-            .ignoresSafeArea(.keyboard, edges: .bottom)
-            
+        }
+        .onChange(of: navigateToResult) { oldValue, newValue in
+            // If navigateToResult changes from true to false, it means ResultView was dismissed
+            if oldValue == true && newValue == false {
+                text = "" // Clear the text field
+            }
         }
     }
 }
