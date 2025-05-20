@@ -41,22 +41,18 @@ class LLMEvaluator: ObservableObject {
         if isPreview {
             self.output = "Preview: Model is ready for roasting!"
             self.running = false
-            return true // Simulate successful setup for previews
+            return true 
         }
 
         guard !running else {
-            // Another operation is in progress
             return false
         }
         running = true
         var success = false
         
         do {
-            // output = "Initializing model..." // You can set this if you want intermediate UI updates
             try await loadModel()
 
-            // output = "Testing model..."
-            // Perform a minimal test generation to ensure the model is responsive
             let testResult = try await modelContainer!.perform { context in
                 let input = try await context.processor.prepare(
                     input: .init(messages: [
@@ -65,13 +61,11 @@ class LLMEvaluator: ObservableObject {
                     ])
                 )
 
-                // Use very restrictive parameters for this test
                 return try MLXLMCommon.generate(
                     input: input,
-                    parameters: GenerateParameters(temperature: 0.1), // Short and quick
+                    parameters: GenerateParameters(temperature: 0.1), 
                     context: context
                 ) { tokens in
-                    // Stop early, we just need a small response
                     return tokens.count >= 2 ? .stop : .more
                 }
             }
@@ -79,9 +73,6 @@ class LLMEvaluator: ObservableObject {
             if !testResult.output.isEmpty && !testResult.output.lowercased().contains("error") {
                 print("Model setup test successful. Output: \(testResult.output)")
                 success = true
-                // Clear any test output from the main published variable if it was set
-                // If output was modified by test, reset it or set to a neutral "Ready."
-                // self.output = "Model ready." // Optional: depends on desired UI state post-setup
             } else {
                 self.output = "Error: Model test generation failed or produced empty/error output. Test output: \(testResult.output)"
                 success = false
@@ -97,7 +88,7 @@ class LLMEvaluator: ObservableObject {
         return success
     }
 
-    func generate(prompt: String, systemPrompt: String = "You are a witty comedian. You roast every word you're given, make it funny, but don't make the roast too long.") async {
+    func generate(prompt: String, systemPrompt: String = SystemPromptFactory.wittyComedianRoast) async {
             if isPreview {
                 self.output = "This is a hilarious preview roast for '\(prompt)'! You're doing great!"
                 self.running = false
@@ -118,7 +109,6 @@ class LLMEvaluator: ObservableObject {
                             ["role": "user", "content": prompt]
                         ])
                     )
-                    // Define parameters for generation here
                     let generateParams = GenerateParameters(temperature: 0.7)
 
                     return try MLXLMCommon.generate(
@@ -127,15 +117,23 @@ class LLMEvaluator: ObservableObject {
                         context: context
                     ) { tokens in
                         let partial = context.tokenizer.decode(tokens: tokens)
-                        Task { @MainActor in self.output = partial }
-                        // Consider a reasonable max token count for roasts
-                        return tokens.count >= 200 ? .stop : .more
+                        Task { @MainActor in 
+                            if self.output.starts(with: "Generating...") || self.output.isEmpty {
+                                self.output = partial
+                            } else {
+                                self.output = partial 
+                            }
+                        }
+                        return tokens.count >= 200 ? .stop : .more 
                     }
                 }
-
-                output = result.output
+                if !result.output.isEmpty {
+                    self.output = result.output
+                } else if !output.starts(with: "Error:") { 
+                    self.output = "Couldn't think of a roast! Try again."
+                }
             } catch {
-                output = "Error: \(error.localizedDescription)"
+                self.output = "Error: \(error.localizedDescription)"
             }
 
             running = false
