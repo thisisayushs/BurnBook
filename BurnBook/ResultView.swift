@@ -12,7 +12,7 @@ struct ResultView: View {
     @Environment(\.dismiss) private var dismiss
     
     let nameToRoast: String
-    @ObservedObject var evaluator: LLMEvaluator 
+    @ObservedObject var evaluator: LLMEvaluator
     let systemPromptForRoast: String
     
     @State private var currentRoast: String = "Roasting..."
@@ -25,23 +25,42 @@ struct ResultView: View {
             .ignoresSafeArea()
             
             VStack {
-                ZStack(alignment: .topTrailing) { // Keep existing alignment for potential future buttons
+                ZStack(alignment: .topTrailing) {
                     RoundedRectangle(cornerRadius: 40, style: .continuous)
                         .foregroundStyle(.white)
-                        .frame(minHeight: 300, idealHeight: 400, maxHeight: 500) // Adjust height constraints
+                        .frame(minHeight: 300, idealHeight: 400, maxHeight: 500)
                         .shadow(color: .black.opacity(0.1), radius: 5)
                         .padding()
                     
-                    // Simplified logic for displayRoast
+                    Button(action: {
+                        Task {
+                            currentRoast = "Roasting \(nameToRoast) again..."
+                            await evaluator.generate(prompt: nameToRoast, systemPrompt: systemPromptForRoast)
+                        }
+                    }) {
+                        Image(systemName: "arrow.clockwise.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(
+                                LinearGradient(colors: [.orange, .red],
+                                             startPoint: .leading,
+                                             endPoint: .trailing)
+                            )
+                            .background(Color.white)
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.1), radius: 5)
+                    }
+                    .disabled(evaluator.running)
+                    .padding(35)
+                    
                     Text(evaluator.running && currentRoast == "Roasting..." ? "Roasting \(nameToRoast)..." : currentRoast)
                         .italic()
                         .fontWeight(.semibold)
                         .multilineTextAlignment(.center)
                         .padding(EdgeInsets(top: 40, leading: 40, bottom: 40, trailing: 40))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center) // Ensure text is centered within available space
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                         .foregroundStyle(LinearGradient(colors: [.orange, .red],
-                                                        startPoint: .leading,
-                                                        endPoint: .trailing))
+                                                      startPoint: .leading,
+                                                      endPoint: .trailing))
                         .animation(.easeInOut, value: currentRoast)
                         .animation(.easeInOut, value: evaluator.running)
 
@@ -59,8 +78,8 @@ struct ResultView: View {
                         Text("Share")
                             .font(.system(size: 28, weight: .black, design: .rounded))
                             .foregroundStyle(LinearGradient(colors: [.orange, .red],
-                                                            startPoint: .leading,
-                                                            endPoint: .trailing))
+                                                          startPoint: .leading,
+                                                          endPoint: .trailing))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 20)
                             .background(Color.white)
@@ -79,8 +98,8 @@ struct ResultView: View {
                             .padding(.vertical, 20)
                             .background(
                                 LinearGradient(colors: [.orange, .red],
-                                     startPoint: .leading,
-                                     endPoint: .trailing)
+                                             startPoint: .leading,
+                                             endPoint: .trailing)
                             )
                             .clipShape(Capsule())
                             .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
@@ -93,7 +112,6 @@ struct ResultView: View {
         .task {
             if currentRoast == "Roasting..." {
                 await evaluator.generate(prompt: nameToRoast, systemPrompt: systemPromptForRoast)
-                // Logic for setting currentRoast from evaluator.output will be handled by .onChange
             }
         }
         .onChange(of: evaluator.output) { _, newOutput in
@@ -101,16 +119,11 @@ struct ResultView: View {
                 if !newOutput.isEmpty && !newOutput.contains("Error:") {
                     self.currentRoast = newOutput
                 } else if newOutput.contains("Error:") {
-                    self.currentRoast = newOutput 
+                    self.currentRoast = newOutput
                 } else if newOutput.isEmpty && (currentRoast.starts(with: "Roasting") || currentRoast.isEmpty) {
                     self.currentRoast = "Couldn't think of a roast for \(nameToRoast)!"
                 }
-            } else if evaluator.running && newOutput.starts(with: "Generating...") || newOutput.isEmpty {
-                 // If evaluator is running and output is cleared or set to "Generating..."
-                 // currentRoast can remain "Roasting..." or be updated to a generic loading
-                 // This part depends on how LLMEvaluator sets its output during progressive generation
             } else if evaluator.running && !newOutput.isEmpty {
-                // If LLMEvaluator provides progressive output
                 self.currentRoast = newOutput
             }
         }
