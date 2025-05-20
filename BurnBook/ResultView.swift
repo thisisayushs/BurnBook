@@ -10,18 +10,20 @@ import SwiftUI
 struct ShareCard: View {
     let roastText: String
     let titleText: String
-    
+    let forcedColorScheme: ColorScheme
+
     var body: some View {
         ZStack {
+            if forcedColorScheme == .dark {
+                Color.black
+            } else {
+                Color.white
+            }
             LinearGradient(colors: [.orange.opacity(0.15), .red.opacity(0.15)],
                           startPoint: .topLeading,
                           endPoint: .bottomTrailing)
             
-        
-            
-            // Main content card
             VStack(spacing: 20) {
-                // Title
                 Text(titleText)
                     .font(.system(size: 32, weight: .heavy, design: .rounded))
                     .foregroundStyle(
@@ -30,7 +32,6 @@ struct ShareCard: View {
                                      endPoint: .bottomTrailing)
                     )
                 
-                // Roast text
                 Text(roastText)
                     .italic()
                     .fontWeight(.semibold)
@@ -42,7 +43,6 @@ struct ShareCard: View {
                     )
                     .padding(.horizontal, 20)
                 
-                // Watermark
                 Text("Burn Book")
                     .font(.caption)
                     .foregroundStyle(.gray)
@@ -55,12 +55,14 @@ struct ShareCard: View {
             .shadow(color: .black.opacity(0.1), radius: 5)
         }
         .frame(width: 400, height: 600)
+        .preferredColorScheme(forcedColorScheme)
     }
 }
 
 struct ResultView: View {
     @Environment(\.dismiss) private var dismiss
-    
+    @Environment(\.colorScheme) private var appColorScheme
+
     let nameToRoast: String
     @ObservedObject var evaluator: LLMEvaluator
     let systemPromptForRoast: String
@@ -70,11 +72,9 @@ struct ResultView: View {
     @State private var shareImage: UIImage?
     
     private func generateShareImage() -> UIImage {
-        let shareCard = ShareCard(roastText: currentRoast, titleText: nameToRoast)
+        let shareCard = ShareCard(roastText: currentRoast, titleText: nameToRoast, forcedColorScheme: appColorScheme)
         let renderer = ImageRenderer(content: shareCard)
-        renderer.scale = 3.0 // Higher resolution
-        
-        // Make sure background is included
+        renderer.scale = 3.0
         renderer.isOpaque = true
         
         return renderer.uiImage ?? UIImage()
@@ -206,7 +206,17 @@ struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
     
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: items, applicationActivities: nil)
+        let activityViewController = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        activityViewController.excludedActivityTypes = [
+            .assignToContact,
+            .addToReadingList,
+            .openInIBooks,
+            .postToVimeo,
+            .postToWeibo,
+            .postToFlickr,
+            .postToTencentWeibo
+        ]
+        return activityViewController
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
