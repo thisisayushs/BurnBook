@@ -26,34 +26,72 @@ struct LoadingView: View {
 
 struct CustomSegmentedPicker: View {
     @Binding var selection: RoastCategory
-    
+    @State private var segmentWidths: [CGFloat] = Array(repeating: 0, count: RoastCategory.allCases.count)
+
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(RoastCategory.allCases) { category in
-                Text(category.rawValue)
-                    .font(.system(.headline, design: .rounded))
-                    .fontWeight(.bold)
-                    .foregroundColor(selection == category ? .white : .gray)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: .infinity)
-                    .background {
-                        if selection == category {
-                            LinearGradient(colors: [.orange, .red],
-                                         startPoint: .leading,
-                                         endPoint: .trailing)
+        GeometryReader { geometry in
+            HStack(spacing: 0) {
+                ForEach(Array(RoastCategory.allCases.enumerated()), id: \.element) { index, category in
+                    Text(category.rawValue)
+                        .font(.system(.headline, design: .rounded))
+                        .fontWeight(.bold)
+                        .foregroundColor(selection == category ? .white : .gray)
+                        .padding(.vertical, 12)
+                        .frame(maxWidth: .infinity)
+                        .background {
+                            if selection == category {
+                                LinearGradient(colors: [.orange, .red],
+                                             startPoint: .leading,
+                                             endPoint: .trailing)
+                            }
                         }
-                    }
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            selection = category
+                        .onTapGesture {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                selection = category
+                            }
                         }
+                        .background(
+                            GeometryReader { segmentGeometry -> Color in
+                                DispatchQueue.main.async {
+                                }
+                                return Color.clear
+                            }
+                        )
+                }
+            }
+            .background(Color.white)
+            .clipShape(Capsule())
+            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        updateSelection(at: value.location, in: geometry.size)
                     }
+            )
+        }
+        .frame(height: 44)
+        .padding(.horizontal, 30)
+    }
+
+    private func updateSelection(at location: CGPoint, in size: CGSize) {
+        let totalWidth = size.width
+        let segmentCount = RoastCategory.allCases.count
+        guard segmentCount > 0 else { return }
+
+        let singleSegmentWidth = totalWidth / CGFloat(segmentCount)
+        
+        var cumulativeWidth: CGFloat = 0
+        for (_, category) in RoastCategory.allCases.enumerated() {
+            cumulativeWidth += singleSegmentWidth
+            if location.x < cumulativeWidth {
+                if selection != category {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selection = category
+                    }
+                }
+                break
             }
         }
-        .background(Color.white)
-        .clipShape(Capsule())
-        .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-        .padding(.horizontal, 30)
     }
 }
 
@@ -67,8 +105,6 @@ struct ContentView: View {
     @State private var loadingMessage = "Warming up the Burns..."
     @State private var selectedCategory: RoastCategory = .auto
     
-    @Environment(\.colorScheme) private var colorScheme
-
     private func validateInput(_ string: String) -> Bool {
         let letterCharacterSet = CharacterSet.letters
         let stringCharacterSet = CharacterSet(charactersIn: string)
@@ -225,7 +261,7 @@ struct ContentView: View {
         }
         .onChange(of: navigateToResult) { oldValue, newValue in
             if oldValue == true && newValue == false {
-                text = "" 
+                text = ""
             }
         }
     }
