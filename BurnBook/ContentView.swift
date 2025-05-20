@@ -67,6 +67,8 @@ struct ContentView: View {
     @State private var loadingMessage = "Warming up the Burns..."
     @State private var selectedCategory: RoastCategory = .auto
     
+    @Environment(\.colorScheme) private var colorScheme
+
     private func validateInput(_ string: String) -> Bool {
         let letterCharacterSet = CharacterSet.letters
         let stringCharacterSet = CharacterSet(charactersIn: string)
@@ -142,6 +144,7 @@ struct ContentView: View {
                                     .fontDesign(.rounded)
                                     .fontWeight(.semibold)
                                     .multilineTextAlignment(.center)
+                                    .foregroundColor(.black)
                                     .padding(.vertical, 16)
                                     .padding(.horizontal, 24)
                                     .background(Color.white)
