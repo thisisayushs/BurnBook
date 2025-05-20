@@ -7,8 +7,58 @@
 
 import SwiftUI
 
-struct ResultView: View {
+struct ShareCard: View {
+    let roastText: String
+    let titleText: String
     
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.orange.opacity(0.15), .red.opacity(0.15)],
+                          startPoint: .topLeading,
+                          endPoint: .bottomTrailing)
+            
+        
+            
+            // Main content card
+            VStack(spacing: 20) {
+                // Title
+                Text(titleText)
+                    .font(.system(size: 32, weight: .heavy, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.orange, .red],
+                                     startPoint: .topLeading,
+                                     endPoint: .bottomTrailing)
+                    )
+                
+                // Roast text
+                Text(roastText)
+                    .italic()
+                    .fontWeight(.semibold)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(
+                        LinearGradient(colors: [.orange, .red],
+                                     startPoint: .leading,
+                                     endPoint: .trailing)
+                    )
+                    .padding(.horizontal, 20)
+                
+                // Watermark
+                Text("Burn Book")
+                    .font(.caption)
+                    .foregroundStyle(.gray)
+                    .padding(.top, 10)
+            }
+            .frame(width: 300)
+            .padding(40)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 40, style: .continuous))
+            .shadow(color: .black.opacity(0.1), radius: 5)
+        }
+        .frame(width: 400, height: 600)
+    }
+}
+
+struct ResultView: View {
     @Environment(\.dismiss) private var dismiss
     
     let nameToRoast: String
@@ -16,6 +66,19 @@ struct ResultView: View {
     let systemPromptForRoast: String
     
     @State private var currentRoast: String = "Roasting..."
+    @State private var isShareSheetPresented = false
+    @State private var shareImage: UIImage?
+    
+    private func generateShareImage() -> UIImage {
+        let shareCard = ShareCard(roastText: currentRoast, titleText: nameToRoast)
+        let renderer = ImageRenderer(content: shareCard)
+        renderer.scale = 3.0 // Higher resolution
+        
+        // Make sure background is included
+        renderer.isOpaque = true
+        
+        return renderer.uiImage ?? UIImage()
+    }
     
     var body: some View {
         ZStack {
@@ -73,7 +136,10 @@ struct ResultView: View {
                 }
                 VStack {
                     Button(action: {
-                        // Share functionality (placeholder)
+                        shareImage = generateShareImage()
+                        if shareImage != nil {
+                            isShareSheetPresented = true
+                        }
                     }) {
                         Text("Share")
                             .font(.system(size: 28, weight: .black, design: .rounded))
@@ -86,7 +152,13 @@ struct ResultView: View {
                             .clipShape(Capsule())
                             .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
                     }
+                    .disabled(evaluator.running)
                     .padding(.horizontal)
+                    .sheet(isPresented: $isShareSheetPresented) {
+                        if let image = shareImage {
+                            ShareSheet(items: [image])
+                        }
+                    }
                     
                     Button(action: {
                         dismiss()
@@ -128,6 +200,16 @@ struct ResultView: View {
             }
         }
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {
