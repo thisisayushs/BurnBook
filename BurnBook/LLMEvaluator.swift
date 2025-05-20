@@ -18,8 +18,14 @@ class LLMEvaluator: ObservableObject {
     
     private let modelConfig = ModelRegistry.llama3_2_3B_4bit
     private var modelContainer: ModelContainer? = nil
+
+    private var isPreview: Bool {
+        return ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+    }
     
     func loadModel() async throws {
+        if isPreview { return }
+        
         guard modelContainer == nil else { return }
         
         MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
@@ -32,6 +38,12 @@ class LLMEvaluator: ObservableObject {
     }
     
     func setupModel() async -> Bool {
+        if isPreview {
+            self.output = "Preview: Model is ready for roasting!"
+            self.running = false
+            return true // Simulate successful setup for previews
+        }
+
         guard !running else {
             // Another operation is in progress
             return false
@@ -86,6 +98,12 @@ class LLMEvaluator: ObservableObject {
     }
 
     func generate(prompt: String, systemPrompt: String = "You are a witty comedian. You roast every word you're given, make it funny, but don't make the roast too long.") async {
+            if isPreview {
+                self.output = "This is a hilarious preview roast for '\(prompt)'! You're doing great!"
+                self.running = false
+                return
+            }
+
             guard !running else { return }
             running = true
             output = "Generating..."
