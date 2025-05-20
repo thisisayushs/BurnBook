@@ -12,7 +12,8 @@ struct ResultView: View {
     @Environment(\.dismiss) private var dismiss
     
     let nameToRoast: String
-    @ObservedObject var evaluator: LLMEvaluator // Use @ObservedObject to observe changes
+    @ObservedObject var evaluator: LLMEvaluator 
+    let systemPromptForRoast: String
     
     @State private var currentRoast: String = "Roasting..."
     
@@ -24,27 +25,36 @@ struct ResultView: View {
             .ignoresSafeArea()
             
             VStack {
-                ZStack {
+                ZStack(alignment: .topTrailing) { // Keep existing alignment for potential future buttons
                     RoundedRectangle(cornerRadius: 40, style: .continuous)
                         .foregroundStyle(.white)
-                        .frame(height: 500)
+                        .frame(minHeight: 300, idealHeight: 400, maxHeight: 500) // Adjust height constraints
                         .shadow(color: .black.opacity(0.1), radius: 5)
                         .padding()
                     
-                    Text(evaluator.running ? "Roasting..." : (currentRoast.isEmpty && !evaluator.output.isEmpty ? evaluator.output : currentRoast) )
+                    // Simplified logic for displayRoast
+                    Text(evaluator.running && currentRoast == "Roasting..." ? "Roasting \(nameToRoast)..." : currentRoast)
                         .italic()
                         .fontWeight(.semibold)
-                        .padding(40)
+                        .multilineTextAlignment(.center)
+                        .padding(EdgeInsets(top: 40, leading: 40, bottom: 40, trailing: 40))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center) // Ensure text is centered within available space
                         .foregroundStyle(LinearGradient(colors: [.orange, .red],
                                                         startPoint: .leading,
                                                         endPoint: .trailing))
-                        .animation(.easeInOut, value: evaluator.running)
                         .animation(.easeInOut, value: currentRoast)
+                        .animation(.easeInOut, value: evaluator.running)
+
+
+                    // If you want a reload button, it would go here, and its action would call:
+                    // await evaluator.generate(prompt: nameToRoast, systemPrompt: systemPromptForRoast)
+                    // For simplicity, this example omits the explicit reload button shown in one of the earlier context files,
+                    // as the primary task is to integrate the category picker.
                         
                 }
                 VStack {
                     Button(action: {
-                        
+                        // Share functionality (placeholder)
                     }) {
                         Text("Share")
                             .font(.system(size: 28, weight: .black, design: .rounded))
@@ -53,15 +63,11 @@ struct ResultView: View {
                                                             endPoint: .trailing))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 20)
-                            .background(
-                                Color.white
-                                
-                            )
+                            .background(Color.white)
                             .clipShape(Capsule())
                             .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
-                        
-                        
-                    }.padding(.horizontal)
+                    }
+                    .padding(.horizontal)
                     
                     Button(action: {
                         dismiss()
@@ -82,39 +88,35 @@ struct ResultView: View {
                     .padding()
                 }
                 .padding()
-                
             }
         }
         .task {
-            // Ensure evaluator.output is cleared or set to a loading state before generating
-            // If evaluator.output holds a previous roast, it might flash briefly.
-            // Consider if evaluator.output should be reset by ContentView or here.
-            // For now, we'll rely on the "Roasting..." text from currentRoast.
-            if currentRoast == "Roasting..." { // Only generate if not already generated or in progress
-                await evaluator.generate(prompt: nameToRoast)
-                // This ensures that if the view is dismissed and reopened for the same roast,
-                // it doesn't re-trigger generation if evaluator.output is already populated.
-                if !evaluator.output.isEmpty && !evaluator.output.contains("Error:") {
-                    self.currentRoast = evaluator.output
-                } else if evaluator.output.contains("Error:") {
-                    self.currentRoast = evaluator.output // Show the error
-                } else {
-                    self.currentRoast = "Couldn't think of a roast!" // Fallback
-                }
-            } else if !evaluator.output.isEmpty && currentRoast != evaluator.output {
-                // If there's already an output from a previous generation (e.g. due to quick re-navigation)
-                // and it's different from what ResultView currently shows, update it.
-                self.currentRoast = evaluator.output
+            if currentRoast == "Roasting..." {
+                await evaluator.generate(prompt: nameToRoast, systemPrompt: systemPromptForRoast)
+                // Logic for setting currentRoast from evaluator.output will be handled by .onChange
             }
         }
         .onChange(of: evaluator.output) { _, newOutput in
-            if !evaluator.running && !newOutput.isEmpty {
-                 self.currentRoast = newOutput
+            if !evaluator.running {
+                if !newOutput.isEmpty && !newOutput.contains("Error:") {
+                    self.currentRoast = newOutput
+                } else if newOutput.contains("Error:") {
+                    self.currentRoast = newOutput 
+                } else if newOutput.isEmpty && (currentRoast.starts(with: "Roasting") || currentRoast.isEmpty) {
+                    self.currentRoast = "Couldn't think of a roast for \(nameToRoast)!"
+                }
+            } else if evaluator.running && newOutput.starts(with: "Generating...") || newOutput.isEmpty {
+                 // If evaluator is running and output is cleared or set to "Generating..."
+                 // currentRoast can remain "Roasting..." or be updated to a generic loading
+                 // This part depends on how LLMEvaluator sets its output during progressive generation
+            } else if evaluator.running && !newOutput.isEmpty {
+                // If LLMEvaluator provides progressive output
+                self.currentRoast = newOutput
             }
         }
     }
 }
 
 #Preview {
-    ResultView(nameToRoast: "Test Name", evaluator: LLMEvaluator())
+    ResultView(nameToRoast: "Test Name", evaluator: LLMEvaluator(), systemPromptForRoast: SystemPromptFactory.wittyComedianRoast)
 }

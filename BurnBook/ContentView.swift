@@ -24,6 +24,39 @@ struct LoadingView: View {
     }
 }
 
+struct CustomSegmentedPicker: View {
+    @Binding var selection: RoastCategory
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(RoastCategory.allCases) { category in
+                Text(category.rawValue)
+                    .font(.system(.headline, design: .rounded))
+                    .fontWeight(.bold)
+                    .foregroundColor(selection == category ? .white : .gray)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background {
+                        if selection == category {
+                            LinearGradient(colors: [.orange, .red],
+                                         startPoint: .leading,
+                                         endPoint: .trailing)
+                        }
+                    }
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selection = category
+                        }
+                    }
+            }
+        }
+        .background(Color.white)
+        .clipShape(Capsule())
+        .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+        .padding(.horizontal, 30)
+    }
+}
+
 struct ContentView: View {
     
     @State private var text: String = ""
@@ -32,6 +65,7 @@ struct ContentView: View {
     
     @State private var isModelReady = false
     @State private var loadingMessage = "Warming up the Burns..."
+    @State private var selectedCategory: RoastCategory = .auto
     
     private func validateInput(_ string: String) -> Bool {
         let letterCharacterSet = CharacterSet.letters
@@ -58,6 +92,23 @@ struct ContentView: View {
         return CGFloat(remainingCharacters) / 10
     }
 
+    private var wittyPlaceholder: String {
+        switch selectedCategory {
+        case .auto:
+            return "Who's getting burned?"
+        case .person:
+            return "Name the victim..."
+        case .object:
+            return "What's on the chopping block?"
+        }
+    }
+    
+    private var segmentGradient: LinearGradient {
+        LinearGradient(colors: [.orange, .red],
+                      startPoint: .leading,
+                      endPoint: .trailing)
+    }
+    
     var body: some View {
         Group {
             if !isModelReady {
@@ -65,16 +116,17 @@ struct ContentView: View {
             } else {
                 NavigationStack {
                     ZStack {
-                        // Background gradient
                         LinearGradient(colors: [.orange.opacity(0.15), .red.opacity(0.15)],
                                        startPoint: .topLeading,
                                        endPoint: .bottomTrailing)
                             .ignoresSafeArea()
                         
-                        VStack(spacing: 40) {
+                        VStack(spacing: 30) {
+                            CustomSegmentedPicker(selection: $selectedCategory)
+                                .padding(.top, 60)
+
                             Spacer()
                             
-                            // Title
                             Text("Burn Book")
                                 .font(.system(size: 52, weight: .heavy, design: .rounded))
                                 .foregroundStyle(
@@ -83,11 +135,9 @@ struct ContentView: View {
                                                  endPoint: .bottomTrailing)
                                 )
                                 .shadow(radius: 2)
-                                .padding(.top, 60)
                            
-                            // Input field
                             VStack(spacing: 0) {
-                                TextField("Who's turn is it?", text: $text)
+                                TextField(wittyPlaceholder, text: $text)
                                     .font(.title3)
                                     .fontDesign(.rounded)
                                     .fontWeight(.semibold)
@@ -112,12 +162,10 @@ struct ContentView: View {
                                             text = oldValue
                                             return
                                         }
-                                        text = newValue.filter { $0.isLetter }
+                                        text = newValue.filter { $0.isLetter || $0.isWhitespace }
                                     }
                                     .animation(.smooth, value: text)
-                                
                             }
-                            .padding(.bottom, 0)
                             
                             Spacer()
                         }
@@ -138,19 +186,21 @@ struct ContentView: View {
                                         LinearGradient(colors: [.orange, .red],
                                                      startPoint: .leading,
                                                      endPoint: .trailing)
-                                            .opacity(text.isEmpty ? 0.5 : 1)
+                                            .opacity(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
                                     )
                                     .clipShape(Capsule())
                                     .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
                             }
-                            .disabled(text.isEmpty)
+                            .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             .padding(.top, 20)
                         }
                         .padding(.horizontal, 30)
+                        .padding(.bottom, 30)
 
                     }
                     .navigationDestination(isPresented: $navigateToResult) {
-                        ResultView(nameToRoast: text, evaluator: evaluator)
+                        let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text)
+                        ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt)
                             .navigationBarBackButtonHidden()
                     }
                     .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -171,9 +221,8 @@ struct ContentView: View {
             }
         }
         .onChange(of: navigateToResult) { oldValue, newValue in
-            // If navigateToResult changes from true to false, it means ResultView was dismissed
             if oldValue == true && newValue == false {
-                text = "" // Clear the text field
+                text = "" 
             }
         }
     }
