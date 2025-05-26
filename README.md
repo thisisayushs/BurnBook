@@ -1,6 +1,6 @@
 # 🔥 Meet BurnBook
 
-## Burn Book runs a light-weight large-language model (LLM) directly on your iPhone thanks to **[MLX-Swift](https://github.com/ml-explore/mlx-swift)**, so every roast is generated privately, instantly, and without racking up API fees.
+Burn Book runs a light-weight large-language model (LLM) directly on your iPhone thanks to **[MLX-Swift](https://github.com/ml-explore/mlx-swift)**, so every roast is generated privately, instantly, and without racking up API fees.
 
 ![App Screenshot](Screenshots/Poster.png)
 
@@ -15,11 +15,11 @@
 
 ## Under the hood
 
- - **SwiftUI** - Pure declarative goodness.
+- **SwiftUI** - Pure declarative goodness.
  
- - **LLM Runtime** - MLX‑Swift wrapping the Metal‑accelerated MLX tensor library.
+- **LLM Runtime** - MLX‑Swift wrapping the Metal‑accelerated MLX tensor library.
  
- - **Model** - Llama 3‑Instruct‑3B, quantized to 4‑bit.
+- **Model** - Llama 3‑Instruct‑3B, quantized to 4‑bit.
 
 ## Installation
 
