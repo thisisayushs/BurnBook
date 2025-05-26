@@ -15,11 +15,13 @@
 
 ## Under the hood
 
- -**SwiftUI** - Pure declarative goodness.
- -**LLM Runtime** - MLX‑Swift wrapping the Metal‑accelerated MLX tensor library.
- -**Model** - Llama 3‑Instruct‑3B, quantized to 4‑bit.
+ - **SwiftUI** - Pure declarative goodness.
+ 
+ - **LLM Runtime** - MLX‑Swift wrapping the Metal‑accelerated MLX tensor library.
+ 
+ - **Model** - Llama 3‑Instruct‑3B, quantized to 4‑bit.
 
-  ## Installation
+## Installation
 
 1. Clone this repository: `git clone https://github.com/thisisayushs/BurnBook.git)`
 2. Open the project in Xcode.
