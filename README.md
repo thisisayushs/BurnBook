@@ -27,5 +27,5 @@ Burn Book runs a light-weight large-language model (LLM) directly on your iPhone
 2. Open the project in Xcode.
 3. Run the app on a simulator or connected device.
 
- *Coming soon to the App Store!*
+*Coming soon to the App Store!*
 
