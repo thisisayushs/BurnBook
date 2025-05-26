@@ -13,17 +13,17 @@
 - 📴 **Offline, real-time** - The 4-bit quantized model lives on device, no network, no wait.
 - 📤 **Share sheet** - Drop burns straight into Messages, TikTok captions, or wherever shade is needed.
 
-  ## Under the hood
+## Under the hood
 
-  -**SwiftUI** - Pure declarative goodness.
-  -**LLM Runtime** - MLX‑Swift wrapping the Metal‑accelerated MLX tensor library.
-  -**Model** - Llama 3‑Instruct‑3B, quantized to 4‑bit.
+ -**SwiftUI** - Pure declarative goodness.
+ -**LLM Runtime** - MLX‑Swift wrapping the Metal‑accelerated MLX tensor library.
+ -**Model** - Llama 3‑Instruct‑3B, quantized to 4‑bit.
 
   ## Installation
 
-  1. Clone this repository: `git clone https://github.com/thisisayushs/BurnBook.git)`
-  2. Open the project in Xcode.
-  3. Run the app on a simulator or connected device.
+1. Clone this repository: `git clone https://github.com/thisisayushs/BurnBook.git)`
+2. Open the project in Xcode.
+3. Run the app on a simulator or connected device.
 
-  *Coming soon to the App Store!*
+*Coming soon to the App Store!*
 
