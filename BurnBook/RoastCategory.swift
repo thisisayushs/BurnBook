@@ -2,7 +2,7 @@
 //  RoastCategory.swift
 //  BurnBook
 //
-//  Created by Alex Carmack on 5/20/25.
+//  Created by Ayush Kumar Singh on 5/20/25.
 //
 
 import Foundation

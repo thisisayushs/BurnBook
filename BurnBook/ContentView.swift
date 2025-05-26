@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct LoadingView: View {
     let message: String
@@ -21,7 +22,9 @@ struct LoadingView: View {
                     .padding(.horizontal)
             }
         }
+        
     }
+        
 }
 
 struct CustomSegmentedPicker: View {
@@ -104,6 +107,8 @@ struct ContentView: View {
     @State private var isModelReady = false
     @State private var loadingMessage = "Warming up the Burns..."
     @State private var selectedCategory: RoastCategory = .auto
+    @State private var roastSettings = RoastSettings()
+    @State private var showSettings = false
     
     private func validateInput(_ string: String) -> Bool {
         let letterCharacterSet = CharacterSet.letters
@@ -237,10 +242,33 @@ struct ContentView: View {
                         .padding(.bottom, 30)
 
                     }
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Button(action: {
+                                showSettings = true
+                            }) {
+                                Image(systemName: "gearshape.fill")
+                                    .font(.system(size: 22))
+                                    .foregroundStyle(
+                                        LinearGradient(colors: [.orange, .red],
+                                                     startPoint: .leading,
+                                                     endPoint: .trailing)
+                                    )
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.white)
+                                    .clipShape(Circle())
+                                    .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                            }
+                        }
+                    }
+                    .navigationBarTitleDisplayMode(.inline)
                     .navigationDestination(isPresented: $navigateToResult) {
-                        let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text)
+                        let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text, settings: roastSettings)
                         ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt)
                             .navigationBarBackButtonHidden()
+                    }
+                    .sheet(isPresented: $showSettings) {
+                        SettingsView(settings: $roastSettings)
                     }
                     .ignoresSafeArea(.keyboard, edges: .bottom)
                 }

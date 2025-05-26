@@ -54,6 +54,7 @@ struct ShareCard: View {
             .clipShape(RoundedRectangle(cornerRadius: 40, style: .continuous))
             .shadow(color: .black.opacity(0.1), radius: 5)
         }
+       
         .frame(width: 400, height: 600)
         .preferredColorScheme(forcedColorScheme)
     }

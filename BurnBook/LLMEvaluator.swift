@@ -2,7 +2,7 @@
 //  LLMEvaluator.swift
 //  BurnBook
 //
-//  Created by Ayush Singh on 5/19/25.
+//  Created by Ayush Kumar Singh on 5/19/25.
 //
 
 import MLX
