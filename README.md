@@ -29,3 +29,7 @@ Burn Book runs a light-weight large-language model (LLM) directly on your iPhone
 
 *Coming soon to the App Store!*
 
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
