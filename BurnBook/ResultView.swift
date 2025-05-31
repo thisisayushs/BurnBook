@@ -157,7 +157,7 @@ struct ResultView: View {
         if isBookmarked && !currentRoast.starts(with: "Roasting") && !currentRoast.contains("Error:") {
             let savedRoast = SavedRoast(nameToRoast: nameToRoast, roastText: currentRoast)
             roastCollection.saveRoast(savedRoast)
-            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
             impactFeedback.impactOccurred()
         }
         else if !isBookmarked {
@@ -166,7 +166,7 @@ struct ResultView: View {
                 $0.nameToRoast == nameToRoast && $0.roastText == currentRoast
             }) {
                 roastCollection.deleteRoast(roastToRemove)
-                let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                let impactFeedback = UIImpactFeedbackGenerator(style: .light)
                 impactFeedback.impactOccurred()
             }
         }
@@ -210,7 +210,7 @@ struct ResultView: View {
                                 currentRoast = "Roasting \(nameToRoast) again..."
                                 await evaluator.generate(prompt: nameToRoast, systemPrompt: systemPromptForRoast)
                             }
-                            let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+                            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
                             impactFeedback.impactOccurred()
                         }) {
                             Image(systemName: "arrow.clockwise.circle.fill")

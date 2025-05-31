@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreHaptics
 
 struct CustomIntensitySlider: View {
     @Binding var value: Double
@@ -22,6 +23,9 @@ struct CustomIntensitySlider: View {
                     .font(.title2)
                     .opacity(value == 0 ? 1.0 : 0.5)
                     .onTapGesture {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             value = 0
                             onChange(0)
@@ -32,6 +36,9 @@ struct CustomIntensitySlider: View {
                     .font(.title2)
                     .opacity(value == 1 ? 1.0 : 0.5)
                     .onTapGesture {
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
+                        
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             value = 1
                             onChange(1)
@@ -42,6 +49,9 @@ struct CustomIntensitySlider: View {
                     .font(.title2)
                     .opacity(value == 2 ? 1.0 : 0.5)
                     .onTapGesture {
+                        let impact = UIImpactFeedbackGenerator(style: .heavy)
+                        impact.impactOccurred()
+                        
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             value = 2
                             onChange(2)
@@ -89,6 +99,9 @@ struct CustomIntensitySlider: View {
                         let percent = min(max(0, gesture.location.x / trackWidth), 1)
                         let newValue = round(percent * 2)
                         if newValue != value {
+                            let selection = UISelectionFeedbackGenerator()
+                            selection.selectionChanged()
+                            
                             value = newValue
                             onChange(newValue)
                         }
@@ -97,6 +110,15 @@ struct CustomIntensitySlider: View {
             .onTapGesture { gesture in
                 let percent = min(max(0, gesture.x / trackWidth), 1)
                 let newValue = round(percent * 2)
+                
+                let impact: UIImpactFeedbackGenerator
+                switch newValue {
+                case 0: impact = UIImpactFeedbackGenerator(style: .light)
+                case 1: impact = UIImpactFeedbackGenerator(style: .medium)
+                default: impact = UIImpactFeedbackGenerator(style: .heavy)
+                }
+                impact.impactOccurred()
+                
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     value = newValue
                     onChange(newValue)
@@ -113,6 +135,9 @@ struct CustomToggle: View {
     
     var body: some View {
         Button(action: {
+            let impact = UIImpactFeedbackGenerator(style: .medium)
+            impact.impactOccurred()
+            
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 isOn.toggle()
             }
@@ -158,6 +183,9 @@ struct CustomAccentPicker: View {
             HStack {
                 ForEach(SpeechAccent.allCases.prefix(3)) { accent in
                     AccentButton(accent: accent, isSelected: selectedAccent == accent) {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             selectedAccent = accent
                         }
@@ -168,6 +196,9 @@ struct CustomAccentPicker: View {
             HStack {
                 ForEach(SpeechAccent.allCases.suffix(2)) { accent in
                     AccentButton(accent: accent, isSelected: selectedAccent == accent) {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             selectedAccent = accent
                         }
@@ -243,6 +274,9 @@ struct CustomSpeedSlider: View {
                     .font(.title2)
                     .opacity(value == range.lowerBound ? 1.0 : 0.5)
                     .onTapGesture {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             value = range.lowerBound
                             onChange(range.lowerBound)
@@ -253,6 +287,9 @@ struct CustomSpeedSlider: View {
                     .font(.title2)
                     .opacity(value == range.upperBound ? 1.0 : 0.5)
                     .onTapGesture {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                             value = range.upperBound
                             onChange(range.upperBound)
@@ -307,6 +344,9 @@ struct CustomSpeedSlider: View {
                         let newValue = range.lowerBound + percent * (range.upperBound - range.lowerBound)
                         let steppedValue = round(newValue / step) * step
                         if steppedValue != value {
+                            let selection = UISelectionFeedbackGenerator()
+                            selection.selectionChanged()
+                            
                             value = steppedValue
                             onChange(steppedValue)
                         }
@@ -316,6 +356,10 @@ struct CustomSpeedSlider: View {
                 let percent = min(max(0, gesture.x / trackWidth), 1)
                 let newValue = range.lowerBound + percent * (range.upperBound - range.lowerBound)
                 let steppedValue = round(newValue / step) * step
+                
+                let impact = UIImpactFeedbackGenerator(style: .light)
+                impact.impactOccurred()
+                
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     value = steppedValue
                     onChange(steppedValue)
@@ -506,10 +550,13 @@ struct SettingsView: View {
                 }
             }
         }
-        .navigationBarBackButtonHidden(true)
+        .navigationBarBackButtonHidden(true)      // hide default arrow
+        .enableEdgeSwipeBack()
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
+                    
+                    
                     dismiss()
                 }) {
                     Image(systemName: "chevron.left.circle.fill")

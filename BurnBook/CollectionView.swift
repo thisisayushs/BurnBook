@@ -72,6 +72,7 @@ struct CollectionView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .enableEdgeSwipeBack()
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
