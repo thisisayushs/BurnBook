@@ -97,7 +97,7 @@ class LLMEvaluator: ObservableObject {
 
             guard !running else { return }
             running = true
-            output = "Generating..."
+            output = "Roasting..."
 
             do {
                 try await loadModel()
@@ -118,7 +118,7 @@ class LLMEvaluator: ObservableObject {
                     ) { tokens in
                         let partial = context.tokenizer.decode(tokens: tokens)
                         Task { @MainActor in 
-                            if self.output.starts(with: "Generating...") || self.output.isEmpty {
+                            if self.output.starts(with: "Roasting...") || self.output.isEmpty {
                                 self.output = partial
                             } else {
                                 self.output = partial 

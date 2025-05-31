@@ -109,6 +109,8 @@ struct ContentView: View {
     @State private var selectedCategory: RoastCategory = .auto
     @State private var roastSettings = RoastSettings()
     @State private var showSettings = false
+    @StateObject private var roastCollection = RoastCollection()
+    @State private var showCollection = false
     
     private func validateInput(_ string: String) -> Bool {
         let letterCharacterSet = CharacterSet.letters
@@ -244,31 +246,52 @@ struct ContentView: View {
                     }
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
-                            Button(action: {
-                                showSettings = true
-                            }) {
-                                Image(systemName: "gearshape.fill")
-                                    .font(.system(size: 22))
-                                    .foregroundStyle(
-                                        LinearGradient(colors: [.orange, .red],
-                                                     startPoint: .leading,
-                                                     endPoint: .trailing)
-                                    )
-                                    .frame(width: 44, height: 44)
-                                    .background(Color.white)
-                                    .clipShape(Circle())
-                                    .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                            HStack(spacing: 10) {
+                                Button(action: {
+                                    showCollection = true
+                                }) {
+                                    Image(systemName: "bookmark.circle.fill")
+                                        .font(.system(size: 20))
+                                        .foregroundStyle(
+                                            LinearGradient(colors: [.orange, .red],
+                                                         startPoint: .leading,
+                                                         endPoint: .trailing)
+                                        )
+                                        .frame(width: 40, height: 40)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+                                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                                }
+                                
+                                Button(action: {
+                                    showSettings = true
+                                }) {
+                                    Image(systemName: "gearshape.fill")
+                                        .font(.system(size: 18))
+                                        .foregroundStyle(
+                                            LinearGradient(colors: [.orange, .red],
+                                                         startPoint: .leading,
+                                                         endPoint: .trailing)
+                                        )
+                                        .frame(width: 40, height: 40)
+                                        .background(Color.white)
+                                        .clipShape(Circle())
+                                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                                }
                             }
                         }
                     }
                     .navigationBarTitleDisplayMode(.inline)
                     .navigationDestination(isPresented: $navigateToResult) {
                         let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text, settings: roastSettings)
-                        ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt)
+                        ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt, roastCollection: roastCollection)
                             .navigationBarBackButtonHidden()
                     }
                     .sheet(isPresented: $showSettings) {
                         SettingsView(settings: $roastSettings)
+                    }
+                    .sheet(isPresented: $showCollection) {
+                        CollectionView(roastCollection: roastCollection)
                     }
                     .ignoresSafeArea(.keyboard, edges: .bottom)
                 }

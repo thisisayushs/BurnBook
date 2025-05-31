@@ -161,7 +161,7 @@ struct SettingsView: View {
             
             VStack(spacing: 40) {
                 VStack(spacing: 15) {
-                    Text("🔥 Burn Settings")
+                    Text("Burn Settings")
                         .font(.system(size: 38, weight: .heavy, design: .rounded))
                         .foregroundStyle(gradientColors)
                         .shadow(radius: 2)

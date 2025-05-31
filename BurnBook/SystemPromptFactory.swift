@@ -10,7 +10,7 @@ import Foundation
 struct SystemPromptFactory {
     static let wittyComedianRoast: String = "You are a witty comedian. You roast every word you're given, make it funny, but don't make the roast too long."
     static let personRoastPrompt: String = "You are a witty comedian specializing in roasting people. Make a funny, lighthearted roast about the person named. Keep it super concise."
-    static let objectRoastPrompt: String = "You are a witty comedian who can find humor in anything, even inanimate objects. Roast the object named. Be creative and keep it super short and funny."
+    static let objectRoastPrompt: String = "You are a witty comedian who can find humor in anything, even inanimate objects or animals. Roast the object named. Be creative and keep it super short and funny."
 
     static func getPrompt(for category: RoastCategory, itemName: String, settings: RoastSettings) -> String {
         let basePrompt = getBasePrompt(for: category)
