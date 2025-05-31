@@ -71,6 +71,22 @@ struct CollectionView: View {
                 }
             }
         }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    Image(systemName: "chevron.left.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(gradientColors)
+                        .frame(width: 40, height: 40)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
+                }
+            }
+        }
         .alert("Delete Roast", isPresented: $showDeleteAlert) {
             Button("Delete", role: .destructive) {
                 if let roast = roastToDelete {

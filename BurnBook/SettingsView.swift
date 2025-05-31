@@ -11,68 +11,82 @@ struct CustomIntensitySlider: View {
     @Binding var value: Double
     let onChange: (Double) -> Void
     
+    // MARK: - Constants
+    private let trackWidth: CGFloat  = 260
+    private let handleDiameter: CGFloat = 28
+    
     var body: some View {
         VStack(spacing: 20) {
             HStack {
                 Text("😊")
                     .font(.title2)
                     .opacity(value == 0 ? 1.0 : 0.5)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            value = 0
+                            onChange(0)
+                        }
+                    }
                 Spacer()
                 Text("😈")
                     .font(.title2)
                     .opacity(value == 1 ? 1.0 : 0.5)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            value = 1
+                            onChange(1)
+                        }
+                    }
                 Spacer()
                 Text("💀")
                     .font(.title2)
                     .opacity(value == 2 ? 1.0 : 0.5)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            value = 2
+                            onChange(2)
+                        }
+                    }
             }
             
-            ZStack {
+            // MARK: - Track & Handle
+            ZStack(alignment: .leading) {
                 // Track
                 RoundedRectangle(cornerRadius: 15)
                     .fill(Color.gray.opacity(0.2))
-                    .frame(height: 8)
+                    .frame(width: trackWidth, height: 8)
                 
                 // Active track
-                HStack {
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(
-                            LinearGradient(colors: [.orange, .red],
-                                         startPoint: .leading,
-                                         endPoint: .trailing)
-                        )
-                        .frame(width: CGFloat(value / 2.0) * 260, height: 8)
-                    Spacer()
-                }
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(
+                        LinearGradient(colors: [.orange, .red],
+                                       startPoint: .leading,
+                                       endPoint: .trailing)
+                    )
+                    .frame(width: CGFloat(value / 2.0) * trackWidth, height: 8)
                 
-                // Slider handle
-                HStack {
-                    Spacer()
-                        .frame(width: CGFloat(value / 2.0) * 260)
-                    
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 28, height: 28)
-                        .shadow(color: .black.opacity(0.2), radius: 5, y: 2)
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    LinearGradient(colors: [.orange, .red],
-                                                 startPoint: .leading,
-                                                 endPoint: .trailing),
-                                    lineWidth: 3
-                                )
-                        )
-                    
-                    Spacer()
-                }
+                // Handle
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: handleDiameter, height: handleDiameter)
+                    .shadow(color: .black.opacity(0.2), radius: 5, y: 2)
+                    .overlay(
+                        Circle()
+                            .stroke(
+                                LinearGradient(colors: [.orange, .red],
+                                               startPoint: .leading,
+                                               endPoint: .trailing),
+                                lineWidth: 3
+                            )
+                    )
+                    // Offset ensures the C E N T E R of the handle matches the emoji position
+                    .offset(x: CGFloat(value / 2.0) * trackWidth - handleDiameter / 2)
             }
-           
-            .frame(width: 260)
+            .frame(width: trackWidth)
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { gesture in
-                        let percent = min(max(0, gesture.location.x / 260), 1)
+                        let percent = min(max(0, gesture.location.x / trackWidth), 1)
                         let newValue = round(percent * 2)
                         if newValue != value {
                             value = newValue
@@ -81,7 +95,7 @@ struct CustomIntensitySlider: View {
                     }
             )
             .onTapGesture { gesture in
-                let percent = min(max(0, gesture.x / 260), 1)
+                let percent = min(max(0, gesture.x / trackWidth), 1)
                 let newValue = round(percent * 2)
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                     value = newValue
@@ -218,63 +232,78 @@ struct CustomSpeedSlider: View {
     let emoji: (String, String)
     let onChange: (Double) -> Void
     
+    // MARK: - Constants
+    private let trackWidth: CGFloat  = 200
+    private let handleDiameter: CGFloat = 24
+    
     var body: some View {
         VStack(spacing: 15) {
             HStack {
                 Text(emoji.0)
                     .font(.title2)
                     .opacity(value == range.lowerBound ? 1.0 : 0.5)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            value = range.lowerBound
+                            onChange(range.lowerBound)
+                        }
+                    }
                 Spacer()
                 Text(emoji.1)
                     .font(.title2)
                     .opacity(value == range.upperBound ? 1.0 : 0.5)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            value = range.upperBound
+                            onChange(range.upperBound)
+                        }
+                    }
             }
             
-            ZStack {
+            // MARK: - Track & Handle
+            ZStack(alignment: .leading) {
                 // Track
                 RoundedRectangle(cornerRadius: 15)
                     .fill(Color.gray.opacity(0.2))
-                    .frame(height: 8)
+                    .frame(width: trackWidth, height: 8)
                 
                 // Active track
-                HStack {
-                    RoundedRectangle(cornerRadius: 15)
-                        .fill(
-                            LinearGradient(colors: [.orange, .red],
-                                         startPoint: .leading,
-                                         endPoint: .trailing)
-                        )
-                        .frame(width: CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound)) * 200, height: 8)
-                    Spacer()
-                }
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(
+                        LinearGradient(colors: [.orange, .red],
+                                       startPoint: .leading,
+                                       endPoint: .trailing)
+                    )
+                    .frame(
+                        width: CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound)) * trackWidth,
+                        height: 8
+                    )
                 
                 // Slider handle
-                HStack {
-                    Spacer()
-                        .frame(width: CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound)) * 200)
-                    
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 24, height: 24)
-                        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    LinearGradient(colors: [.orange, .red],
-                                                 startPoint: .leading,
-                                                 endPoint: .trailing),
-                                    lineWidth: 3
-                                )
-                        )
-                    
-                    Spacer()
-                }
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: handleDiameter, height: handleDiameter)
+                    .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
+                    .overlay(
+                        Circle()
+                            .stroke(
+                                LinearGradient(colors: [.orange, .red],
+                                               startPoint: .leading,
+                                               endPoint: .trailing),
+                                lineWidth: 3
+                            )
+                    )
+                    // Center‐based offset so knob aligns with percentage
+                    .offset(
+                        x: CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound)) * trackWidth
+                        - handleDiameter / 2
+                    )
             }
-            .frame(width: 200)
+            .frame(width: trackWidth)
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { gesture in
-                        let percent = min(max(0, gesture.location.x / 200), 1)
+                        let percent = min(max(0, gesture.location.x / trackWidth), 1)
                         let newValue = range.lowerBound + percent * (range.upperBound - range.lowerBound)
                         let steppedValue = round(newValue / step) * step
                         if steppedValue != value {
@@ -284,7 +313,7 @@ struct CustomSpeedSlider: View {
                     }
             )
             .onTapGesture { gesture in
-                let percent = min(max(0, gesture.x / 200), 1)
+                let percent = min(max(0, gesture.x / trackWidth), 1)
                 let newValue = range.lowerBound + percent * (range.upperBound - range.lowerBound)
                 let steppedValue = round(newValue / step) * step
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -393,13 +422,14 @@ struct SettingsView: View {
                                         Text("Politics")
                                             .font(.system(size: 20, weight: .bold, design: .rounded))
                                             .foregroundStyle(gradientColors)
+                                            .fixedSize()
                                     }
                                     Text("Include political burns")
                                         .font(.subheadline)
                                         .foregroundColor(.gray)
                                 }
                                 
-                                Spacer()
+                                Spacer(minLength: 10)
                                 
                                 CustomToggle(
                                     isOn: $settings.allowsPolitics,
@@ -423,13 +453,14 @@ struct SettingsView: View {
                                         Text("Profanity")
                                             .font(.system(size: 20, weight: .bold, design: .rounded))
                                             .foregroundStyle(gradientColors)
+                                            .fixedSize()
                                     }
                                     Text("Allow spicy language")
                                         .font(.subheadline)
                                         .foregroundColor(.gray)
                                 }
                                 
-                                Spacer()
+                                Spacer(minLength: 10)
                                 
                                 CustomToggle(
                                     isOn: $settings.allowsProfanity,
@@ -437,7 +468,7 @@ struct SettingsView: View {
                                     activeColor: gradientColors
                                 )
                             }
-                            .padding(.horizontal, 25)
+                            .padding(.horizontal, 20)
                             .padding(.vertical, 20)
                             .background(
                                 RoundedRectangle(cornerRadius: 25)
@@ -473,25 +504,22 @@ struct SettingsView: View {
                     }
                     .padding(.horizontal, 30)
                 }
-                
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
                     dismiss()
                 }) {
-                    HStack {
-                        Text("🔥")
-                            .font(.title2)
-                        Text("Let's Roast!")
-                            .font(.system(size: 24, weight: .black, design: .rounded))
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 18)
-                    .background(gradientColors)
-                    .clipShape(Capsule())
-                    .shadow(color: .black.opacity(0.2), radius: 12, y: 6)
+                    Image(systemName: "chevron.left.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(gradientColors)
+                        .frame(width: 40, height: 40)
+                        .background(Color.white)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                 }
-                .padding(.horizontal, 30)
-                .padding(.bottom, 40)
             }
         }
     }

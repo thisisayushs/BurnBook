@@ -269,9 +269,7 @@ struct ContentView: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         HStack(spacing: 10) {
-                            Button(action: {
-                                showCollection = true
-                            }) {
+                            NavigationLink(destination: CollectionView(roastCollection: roastCollection, settings: roastSettings)) {
                                 Image(systemName: "bookmark.circle.fill")
                                     .font(.system(size: 20))
                                     .foregroundStyle(
@@ -285,9 +283,7 @@ struct ContentView: View {
                                     .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                             }
                             
-                            Button(action: {
-                                showSettings = true
-                            }) {
+                            NavigationLink(destination: SettingsView(settings: $roastSettings)) {
                                 Image(systemName: "gearshape.fill")
                                     .font(.system(size: 18))
                                     .foregroundStyle(
@@ -308,12 +304,6 @@ struct ContentView: View {
                     let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text, settings: roastSettings)
                     ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt, roastCollection: roastCollection, settings: roastSettings)
                         .navigationBarBackButtonHidden()
-                }
-                .sheet(isPresented: $showSettings) {
-                    SettingsView(settings: $roastSettings)
-                }
-                .sheet(isPresented: $showCollection) {
-                    CollectionView(roastCollection: roastCollection, settings: roastSettings)
                 }
                 .ignoresSafeArea(.keyboard, edges: .bottom)
             }
