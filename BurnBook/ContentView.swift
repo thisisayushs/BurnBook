@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import CoreHaptics
 
 struct LoadingView: View {
     let message: String
@@ -112,6 +113,42 @@ struct ContentView: View {
     @StateObject private var roastCollection = RoastCollection()
     @State private var showCollection = false
     
+    @State private var hapticEngine: CHHapticEngine?
+    
+    private func prepareHaptics() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        
+        do {
+            hapticEngine = try CHHapticEngine()
+            try hapticEngine?.start()
+        } catch {
+            print("Failed to initialize haptic engine: \(error.localizedDescription)")
+        }
+    }
+    
+    private func complexSuccess() {
+        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        var events = [CHHapticEvent]()
+        
+        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: 1)
+        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: 1)
+        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
+        events.append(event)
+        
+        let intensity2 = CHHapticEventParameter(parameterID: .hapticIntensity, value: 0.5)
+        let sharpness2 = CHHapticEventParameter(parameterID: .hapticSharpness, value: 0.5)
+        let event2 = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity2, sharpness2], relativeTime: 0.125)
+        events.append(event2)
+        
+        do {
+            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let player = try hapticEngine?.makePlayer(with: pattern)
+            try player?.start(atTime: 0)
+        } catch {
+            print("Failed to play haptic pattern: \(error.localizedDescription)")
+        }
+    }
+    
     private func validateInput(_ string: String) -> Bool {
         let letterCharacterSet = CharacterSet.letters
         let stringCharacterSet = CharacterSet(charactersIn: string)
@@ -157,6 +194,8 @@ struct ContentView: View {
     var body: some View {
         makeContentView()
             .onAppear {
+                prepareHaptics()
+                
                 if !isModelReady {
                     Task {
                         loadingMessage = "Downloading AI Model (this might take a moment on first launch)..."
@@ -243,6 +282,7 @@ struct ContentView: View {
                     VStack{
                         Spacer()
                         Button(action: {
+                            complexSuccess()
                             self.navigateToResult = true
                         }) {
                             Text("Roast It")
