@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct CollectionView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var roastCollection: RoastCollection
     @State private var showDeleteAlert = false
     @State private var roastToDelete: SavedRoast?
+    let settings: RoastSettings
     
     private var gradientColors: LinearGradient {
         LinearGradient(colors: [.orange, .red],
@@ -57,7 +59,7 @@ struct CollectionView: View {
                     ScrollView {
                         LazyVStack(spacing: 15) {
                             ForEach(roastCollection.savedRoasts) { roast in
-                                RoastCard(roast: roast) {
+                                RoastCard(roast: roast, settings: settings) {
                                     roastToDelete = roast
                                     showDeleteAlert = true
                                 }
@@ -84,11 +86,17 @@ struct CollectionView: View {
 
 struct RoastCard: View {
     let roast: SavedRoast
+    let settings: RoastSettings
     let onDelete: () -> Void
     
     @State private var isShareSheetPresented = false
     @State private var shareImage: UIImage?
     @Environment(\.colorScheme) private var colorScheme
+    
+    // MARK: - Speech synthesis state
+    @State private var speechSynthesizer = AVSpeechSynthesizer()
+    @State private var isSpeaking = false
+    @State private var speechDelegate: SpeechDelegate?     // keep delegate alive
     
     private var gradientColors: LinearGradient {
         LinearGradient(colors: [.orange, .red],
@@ -121,6 +129,20 @@ struct RoastCard: View {
                 
                 Spacer()
                 
+                // NEW: Speech button
+                Button(action: speakRoast) {
+                    Image(systemName: isSpeaking ? "speaker.slash.circle.fill" : "speaker.wave.2.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.orange, .red],
+                                           startPoint: .leading,
+                                           endPoint: .trailing)
+                        )
+                }
+                .scaleEffect(isSpeaking ? 1.1 : 1.0)
+                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSpeaking)
+                
+                // Existing share button
                 Button(action: {
                     shareImage = generateShareImage()
                     if shareImage != nil {
@@ -132,6 +154,7 @@ struct RoastCard: View {
                         .foregroundStyle(gradientColors)
                 }
                 
+                // Existing delete button
                 Button(action: onDelete) {
                     Image(systemName: "trash.circle.fill")
                         .font(.system(size: 24))
@@ -158,13 +181,59 @@ struct RoastCard: View {
                 ShareSheet(items: [image])
             }
         }
+        .onAppear {
+            // keep delegate alive so weak ref doesn’t nil-out
+            speechDelegate = SpeechDelegate(isSpeaking: $isSpeaking)
+            speechSynthesizer.delegate = speechDelegate
+        }
+    }
+    
+    // MARK: - Speech helper
+    private func speakRoast() {
+        if isSpeaking {
+            speechSynthesizer.stopSpeaking(at: .immediate)
+            return
+        }
+        
+        let utterance = AVSpeechUtterance(string: roast.roastText)
+        
+        // Accent (fallback to US)
+        if let accentVoice = AVSpeechSynthesisVoice(language: settings.speechAccent.voiceLanguage) {
+            utterance.voice = accentVoice
+        } else {
+            utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        }
+        
+        // Speed 0‥1  →  legal min‥max
+        let minRate = AVSpeechUtteranceMinimumSpeechRate
+        let maxRate = AVSpeechUtteranceMaximumSpeechRate
+        utterance.rate = minRate + (maxRate - minRate) * Float(settings.speechSpeed)
+        
+        // Pitch
+        utterance.pitchMultiplier = Float(settings.speechPitch)
+        
+        utterance.volume = 0.8
+        speechSynthesizer.speak(utterance)
+        isSpeaking = true
     }
 }
 
-
-
-
+// Keep talking-state in sync
+private class SpeechDelegate: NSObject, AVSpeechSynthesizerDelegate {
+    @Binding var isSpeaking: Bool
+    
+    init(isSpeaking: Binding<Bool>) {
+        _isSpeaking = isSpeaking
+    }
+    
+    func speechSynthesizer(_ s: AVSpeechSynthesizer, didFinish _: AVSpeechUtterance) {
+        isSpeaking = false
+    }
+    func speechSynthesizer(_ s: AVSpeechSynthesizer, didCancel _: AVSpeechUtterance) {
+        isSpeaking = false
+    }
+}
 
 #Preview {
-    CollectionView(roastCollection: RoastCollection())
+    CollectionView(roastCollection: RoastCollection(), settings: RoastSettings())
 }

@@ -136,14 +136,193 @@ struct CustomToggle: View {
     }
 }
 
+struct CustomAccentPicker: View {
+    @Binding var selectedAccent: SpeechAccent
+    
+    var body: some View {
+        VStack(spacing: 15) {
+            HStack {
+                ForEach(SpeechAccent.allCases.prefix(3)) { accent in
+                    AccentButton(accent: accent, isSelected: selectedAccent == accent) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedAccent = accent
+                        }
+                    }
+                }
+            }
+            
+            HStack {
+                ForEach(SpeechAccent.allCases.suffix(2)) { accent in
+                    AccentButton(accent: accent, isSelected: selectedAccent == accent) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedAccent = accent
+                        }
+                    }
+                    if accent != SpeechAccent.allCases.last {
+                        Spacer()
+                    }
+                }
+                if SpeechAccent.allCases.suffix(2).count == 1 {
+                    Spacer()
+                    Spacer()
+                }
+            }
+        }
+    }
+}
+
+struct AccentButton: View {
+    let accent: SpeechAccent
+    let isSelected: Bool
+    let action: () -> Void
+    
+    private var flag: String {
+        switch accent {
+        case .american: return "🇺🇸"
+        case .british: return "🇬🇧"
+        case .australian: return "🇦🇺"
+        case .irish: return "🇮🇪"
+        case .southAfrican: return "🇿🇦"
+        }
+    }
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Text(flag)
+                    .font(.title2)
+                Text(accent.rawValue)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(isSelected ? .white : .gray)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(isSelected ?
+                          LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing) :
+                          LinearGradient(colors: [Color.gray.opacity(0.1)], startPoint: .leading, endPoint: .trailing)
+                    )
+            )
+            .shadow(color: .black.opacity(isSelected ? 0.2 : 0.05), radius: isSelected ? 8 : 3, y: isSelected ? 4 : 1)
+            .scaleEffect(isSelected ? 1.05 : 1.0)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct CustomSpeedSlider: View {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let emoji: (String, String)
+    let onChange: (Double) -> Void
+    
+    var body: some View {
+        VStack(spacing: 15) {
+            HStack {
+                Text(emoji.0)
+                    .font(.title2)
+                    .opacity(value == range.lowerBound ? 1.0 : 0.5)
+                Spacer()
+                Text(emoji.1)
+                    .font(.title2)
+                    .opacity(value == range.upperBound ? 1.0 : 0.5)
+            }
+            
+            ZStack {
+                // Track
+                RoundedRectangle(cornerRadius: 15)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(height: 8)
+                
+                // Active track
+                HStack {
+                    RoundedRectangle(cornerRadius: 15)
+                        .fill(
+                            LinearGradient(colors: [.orange, .red],
+                                         startPoint: .leading,
+                                         endPoint: .trailing)
+                        )
+                        .frame(width: CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound)) * 200, height: 8)
+                    Spacer()
+                }
+                
+                // Slider handle
+                HStack {
+                    Spacer()
+                        .frame(width: CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound)) * 200)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 24, height: 24)
+                        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    LinearGradient(colors: [.orange, .red],
+                                                 startPoint: .leading,
+                                                 endPoint: .trailing),
+                                    lineWidth: 3
+                                )
+                        )
+                    
+                    Spacer()
+                }
+            }
+            .frame(width: 200)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { gesture in
+                        let percent = min(max(0, gesture.location.x / 200), 1)
+                        let newValue = range.lowerBound + percent * (range.upperBound - range.lowerBound)
+                        let steppedValue = round(newValue / step) * step
+                        if steppedValue != value {
+                            value = steppedValue
+                            onChange(steppedValue)
+                        }
+                    }
+            )
+            .onTapGesture { gesture in
+                let percent = min(max(0, gesture.x / 200), 1)
+                let newValue = range.lowerBound + percent * (range.upperBound - range.lowerBound)
+                let steppedValue = round(newValue / step) * step
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    value = steppedValue
+                    onChange(steppedValue)
+                }
+            }
+            
+            Text("\(Int(value * 100))%")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(
+                    LinearGradient(colors: [.orange, .red],
+                                 startPoint: .leading,
+                                 endPoint: .trailing)
+                )
+                .padding(.horizontal, 16)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(Color.white)
+                        .shadow(color: .black.opacity(0.1), radius: 3, y: 1)
+                )
+        }
+    }
+}
+
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var settings: RoastSettings
     @State private var intensitySliderValue: Double
+    @State private var speechSpeedSliderValue: Double
+    @State private var speechPitchSliderValue: Double
     
     init(settings: Binding<RoastSettings>) {
         self._settings = settings
         self._intensitySliderValue = State(initialValue: settings.wrappedValue.intensity.sliderValue)
+        self._speechSpeedSliderValue = State(initialValue: settings.wrappedValue.speechSpeed)
+        self._speechPitchSliderValue = State(initialValue: settings.wrappedValue.speechPitch)
     }
     
     private var gradientColors: LinearGradient {
@@ -264,6 +443,31 @@ struct SettingsView: View {
                                 RoundedRectangle(cornerRadius: 25)
                                     .fill(Color.white)
                                     .shadow(color: .black.opacity(0.08), radius: 10, y: 5)
+                            )
+                        }
+                        
+                        VStack(spacing: 25) {
+                            VStack(spacing: 20) {
+                                Text("Speech Settings")
+                                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                                    .foregroundStyle(gradientColors)
+                                
+                                CustomAccentPicker(selectedAccent: $settings.speechAccent)
+                                
+                                CustomSpeedSlider(value: $speechSpeedSliderValue, range: 0.1...1.0, step: 0.1, emoji: ("🐢", "🐇"), onChange: { newValue in
+                                    settings.speechSpeed = newValue
+                                })
+                                
+                                CustomSpeedSlider(value: $speechPitchSliderValue, range: 0.5...2.0, step: 0.1, emoji: ("🔽", "🔼"), onChange: { newValue in
+                                    settings.speechPitch = newValue
+                                })
+                            }
+                            .padding(.horizontal, 30)
+                            .padding(.vertical, 30)
+                            .background(
+                                RoundedRectangle(cornerRadius: 30)
+                                    .fill(Color.white)
+                                    .shadow(color: .black.opacity(0.08), radius: 15, y: 8)
                             )
                         }
                     }
