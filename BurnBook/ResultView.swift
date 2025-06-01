@@ -358,6 +358,7 @@ struct ResultView: View {
                 lastOutputLength = newOutput.count
             }
         }
+        .enableEdgeSwipeBack()
     }
 }
 
