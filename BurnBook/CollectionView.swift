@@ -101,20 +101,23 @@ struct CollectionView: View {
     }
 }
 
+// MARK: - Safe wrapper for sharing
+private struct ShareImage: Identifiable {
+    let id  = UUID()
+    let url: URL          // share by file-URL so filename is preserved
+}
+
 struct RoastCard: View {
     let roast: SavedRoast
     let settings: RoastSettings
     let onDelete: () -> Void
     
-    @State private var isShareSheetPresented = false
-    @State private var shareImage: UIImage?
-    @Environment(\.colorScheme) private var colorScheme
-    
-    // MARK: - Speech synthesis state
-    @State private var speechSynthesizer = AVSpeechSynthesizer()
     @State private var isSpeaking = false
+    @State private var shareItem: ShareImage?          // NEW: item-based sheet
+    @State private var speechSynthesizer = AVSpeechSynthesizer()
     @State private var speechDelegate: SpeechDelegate?     // keep delegate alive
     @StateObject private var personalVoiceManager = PersonalVoiceManager()
+    @Environment(\.colorScheme) private var colorScheme
     
     private var gradientColors: LinearGradient {
         LinearGradient(colors: [.orange, .red],
@@ -195,12 +198,24 @@ struct RoastCard: View {
                 .scaleEffect(isSpeaking ? 1.1 : 1.0)
                 .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSpeaking)
                 
-                // Existing share button
+                // Existing share button (rewritten to use `ShareImage`)
                 Button(action: {
-                    shareImage = generateShareImage()
-                    if shareImage != nil {
-                        isShareSheetPresented = true
-                    }
+                    let rendered = generateShareImage()
+                    guard let data = rendered.pngData() else { return }
+                    
+                    // create a safe filename
+                    let safeName = roast.nameToRoast
+                        .replacingOccurrences(of: "/", with: "-")
+                        .replacingOccurrences(of: ":", with: "-")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    let fileName = "\(safeName) Roast.png"
+                    
+                    let url = FileManager.default.temporaryDirectory
+                        .appendingPathComponent(fileName)
+                    try? data.write(to: url, options: .atomic)
+                    
+                    // trigger sheet
+                    shareItem = ShareImage(url: url)
                 }) {
                     Image(systemName: "square.and.arrow.up.circle.fill")
                         .font(.system(size: 24))
@@ -229,10 +244,9 @@ struct RoastCard: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-        .sheet(isPresented: $isShareSheetPresented) {
-            if let image = shareImage {
-                ShareSheet(items: [image])
-            }
+        // NEW: item-based sheet avoids first-launch blank view
+        .sheet(item: $shareItem) { item in
+            ShareSheet(items: [item.url])
         }
         .onAppear {
             // keep delegate alive so weak ref doesn’t nil-out
@@ -266,4 +280,3 @@ private class SpeechDelegate: NSObject, AVSpeechSynthesizerDelegate {
 #Preview {
     CollectionView(roastCollection: RoastCollection(), settings: RoastSettings())
 }
-
