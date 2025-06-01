@@ -19,7 +19,7 @@ Burn Book runs a light-weight large-language model (LLM) directly on your iPhone
  
 - **LLM Runtime** - MLX‑Swift wrapping the Metal‑accelerated MLX tensor library.
  
-- **Model** - Llama 3‑Instruct‑3B, quantized to 4‑bit.
+- **Model** - Llama 3‑Instruct‑1B (~700 MB on disk), quantized to 4‑bit.
 
 ## Installation
 
