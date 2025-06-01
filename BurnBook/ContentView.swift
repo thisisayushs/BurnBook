@@ -217,136 +217,133 @@ struct ContentView: View {
     
     @ViewBuilder
     private func makeContentView() -> some View {
-        if !isModelReady {
-            LoadingView(message: loadingMessage)
-        } else {
-            NavigationStack {
-                ZStack {
-                    LinearGradient(colors: [.orange.opacity(0.15), .red.opacity(0.15)],
-                                   startPoint: .topLeading,
-                                   endPoint: .bottomTrailing)
+        // Model is bundled, so present the main UI directly.
+        NavigationStack {
+            ZStack {
+                LinearGradient(colors: [.orange.opacity(0.15), .red.opacity(0.15)],
+                               startPoint: .topLeading,
+                               endPoint: .bottomTrailing)
                     .ignoresSafeArea()
+                
+                VStack(spacing: 30) {
+                    CustomSegmentedPicker(selection: $selectedCategory)
+                        .padding(.top, 60)
                     
-                    VStack(spacing: 30) {
-                        CustomSegmentedPicker(selection: $selectedCategory)
-                            .padding(.top, 60)
-                        
-                        Spacer()
-                        
-                        Text("Burn Book")
-                            .font(.system(size: 52, weight: .heavy, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(colors: [.orange, .red],
-                                               startPoint: .topLeading,
-                                               endPoint: .bottomTrailing)
+                    Spacer()
+                    
+                    Text("Burn Book")
+                        .font(.system(size: 52, weight: .heavy, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(colors: [.orange, .red],
+                                           startPoint: .topLeading,
+                                           endPoint: .bottomTrailing)
+                        )
+                        .shadow(radius: 2)
+                    
+                    VStack(spacing: 0) {
+                        TextField(wittyPlaceholder, text: $text)
+                            .font(.title3)
+                            .fontDesign(.rounded)
+                            .fontWeight(.semibold)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.black)
+                            .padding(.vertical, 16)
+                            .padding(.horizontal, 24)
+                            .background(Color.white)
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .trim(from: 0, to: Double(45 - text.count) / 45.0)
+                                    .stroke(
+                                        LinearGradient(colors: [.orange, .red],
+                                                       startPoint: .leading,
+                                                       endPoint: .trailing),
+                                        style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                                    )
                             )
-                            .shadow(radius: 2)
-                        
-                        VStack(spacing: 0) {
-                            TextField(wittyPlaceholder, text: $text)
-                                .font(.title3)
-                                .fontDesign(.rounded)
-                                .fontWeight(.semibold)
-                                .multilineTextAlignment(.center)
-                                .foregroundColor(.black)
-                                .padding(.vertical, 16)
-                                .padding(.horizontal, 24)
-                                .background(Color.white)
-                                .clipShape(Capsule())
-                                .overlay(
-                                    Capsule()
-                                        .trim(from: 0, to: Double(45 - text.count) / 45.0)
-                                        .stroke(
-                                            LinearGradient(colors: [.orange, .red],
-                                                           startPoint: .leading,
-                                                           endPoint: .trailing),
-                                            style: StrokeStyle(lineWidth: 2, lineCap: .round)
-                                        )
-                                )
-                                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-                                .onChange(of: text, initial: false) { oldValue, newValue in
-                                    if oldValue.count >= 45 && newValue.count > oldValue.count {
-                                        text = oldValue
-                                        return
-                                    }
-                                    text = newValue.filter { $0.isLetter || $0.isWhitespace }
+                            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                            .onChange(of: text, initial: false) { oldValue, newValue in
+                                if oldValue.count >= 45 && newValue.count > oldValue.count {
+                                    text = oldValue
+                                    return
                                 }
-                                .animation(.smooth, value: text)
-                        }
-                        
-                        Spacer()
+                                text = newValue.filter { $0.isLetter || $0.isWhitespace }
+                            }
+                            .animation(.smooth, value: text)
                     }
-                    .padding(.bottom, 150)
-                    .padding(.horizontal, 30)
                     
-                    VStack{
-                        Spacer()
-                        Button(action: {
-                            complexSuccess()
-                            self.navigateToResult = true
-                        }) {
-                            Text("Roast It")
-                                .font(.system(size: 28, weight: .black, design: .rounded))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 20)
-                                .background(
+                    Spacer()
+                }
+                .padding(.bottom, 150)
+                .padding(.horizontal, 30)
+                
+                VStack{
+                    Spacer()
+                    Button(action: {
+                        complexSuccess()
+                        self.navigateToResult = true
+                    }) {
+                        Text("Roast It")
+                            .font(.system(size: 28, weight: .black, design: .rounded))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                            .background(
+                                LinearGradient(colors: [.orange, .red],
+                                               startPoint: .leading,
+                                               endPoint: .trailing)
+                                .opacity(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+                            )
+                            .clipShape(Capsule())
+                            .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
+                    }
+                    .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .padding(.top, 20)
+                }
+                .padding(.horizontal, 30)
+                .padding(.bottom, 30)
+                
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 10) {
+                        NavigationLink(destination: CollectionView(roastCollection: roastCollection, settings: roastSettings)) {
+                            Image(systemName: "bookmark.circle.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(
                                     LinearGradient(colors: [.orange, .red],
                                                    startPoint: .leading,
                                                    endPoint: .trailing)
-                                    .opacity(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
                                 )
-                                .clipShape(Capsule())
-                                .shadow(color: .black.opacity(0.2), radius: 10, y: 5)
+                                .frame(width: 40, height: 40)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                         }
-                        .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        .padding(.top, 20)
-                    }
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 30)
-                    
-                }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        HStack(spacing: 10) {
-                            NavigationLink(destination: CollectionView(roastCollection: roastCollection, settings: roastSettings)) {
-                                Image(systemName: "bookmark.circle.fill")
-                                    .font(.system(size: 20))
-                                    .foregroundStyle(
-                                        LinearGradient(colors: [.orange, .red],
-                                                       startPoint: .leading,
-                                                       endPoint: .trailing)
-                                    )
-                                    .frame(width: 40, height: 40)
-                                    .background(Color.white)
-                                    .clipShape(Circle())
-                                    .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
-                            }
-                            
-                            NavigationLink(destination: SettingsView(settings: $roastSettings)) {
-                                Image(systemName: "gearshape.fill")
-                                    .font(.system(size: 18))
-                                    .foregroundStyle(
-                                        LinearGradient(colors: [.orange, .red],
-                                                       startPoint: .leading,
-                                                       endPoint: .trailing)
-                                    )
-                                    .frame(width: 40, height: 40)
-                                    .background(Color.white)
-                                    .clipShape(Circle())
-                                    .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
-                            }
+                        
+                        NavigationLink(destination: SettingsView(settings: $roastSettings)) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 18))
+                                .foregroundStyle(
+                                    LinearGradient(colors: [.orange, .red],
+                                                   startPoint: .leading,
+                                                   endPoint: .trailing)
+                                )
+                                .frame(width: 40, height: 40)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                         }
                     }
                 }
-                .navigationBarTitleDisplayMode(.inline)
-                .navigationDestination(isPresented: $navigateToResult) {
-                    let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text, settings: roastSettings)
-                    ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt, roastCollection: roastCollection, settings: roastSettings)
-                        .navigationBarBackButtonHidden()
-                }
-                .ignoresSafeArea(.keyboard, edges: .bottom)
             }
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(isPresented: $navigateToResult) {
+                let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text, settings: roastSettings)
+                ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt, roastCollection: roastCollection, settings: roastSettings)
+                    .navigationBarBackButtonHidden()
+            }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
     }
     

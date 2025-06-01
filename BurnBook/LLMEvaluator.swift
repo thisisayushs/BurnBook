@@ -16,7 +16,7 @@ class LLMEvaluator: ObservableObject {
     @Published var output = ""
     @Published var running = false
     
-    private let modelConfig = ModelRegistry.llama3_2_3B_4bit
+    private let modelConfig = ModelConfiguration(directory: Bundle.main.resourceURL!, defaultPrompt: "You're a witty comedian")
     private var modelContainer: ModelContainer? = nil
 
     private var isPreview: Bool {
@@ -30,18 +30,17 @@ class LLMEvaluator: ObservableObject {
         
         MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
         
+        // Model is shipped inside the app bundle, so we simply load it.
         modelContainer = try await LLMModelFactory.shared.loadContainer(
             configuration: modelConfig
-        ) { progress in
-            print("Downloading model: \(Int(progress.fractionCompleted * 100))%")
-        }
+        )
     }
     
     func setupModel() async -> Bool {
         if isPreview {
             self.output = "Preview: Model is ready for roasting!"
             self.running = false
-            return true 
+            return true
         }
 
         guard !running else {
@@ -63,7 +62,7 @@ class LLMEvaluator: ObservableObject {
 
                 return try MLXLMCommon.generate(
                     input: input,
-                    parameters: GenerateParameters(temperature: 0.1), 
+                    parameters: GenerateParameters(temperature: 0.1),
                     context: context
                 ) { tokens in
                     return tokens.count >= 2 ? .stop : .more
@@ -117,19 +116,19 @@ class LLMEvaluator: ObservableObject {
                         context: context
                     ) { tokens in
                         let partial = context.tokenizer.decode(tokens: tokens)
-                        Task { @MainActor in 
+                        Task { @MainActor in
                             if self.output.starts(with: "Roasting...") || self.output.isEmpty {
                                 self.output = partial
                             } else {
-                                self.output = partial 
+                                self.output = partial
                             }
                         }
-                        return tokens.count >= 200 ? .stop : .more 
+                        return tokens.count >= 200 ? .stop : .more
                     }
                 }
                 if !result.output.isEmpty {
                     self.output = result.output
-                } else if !output.starts(with: "Error:") { 
+                } else if !output.starts(with: "Error:") {
                     self.output = "Couldn't think of a roast! Try again."
                 }
             } catch {
