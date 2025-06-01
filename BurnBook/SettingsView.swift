@@ -179,6 +179,8 @@ struct CustomToggle: View {
 struct CustomAccentPicker: View {
     @Binding var selectedAccent: SpeechAccent
     @StateObject private var personalVoiceManager = PersonalVoiceManager()
+    @State private var showPersonalVoiceAlert = false
+    @State private var previousAccent: SpeechAccent = .american
     
     var body: some View {
         VStack(spacing: 15) {
@@ -212,6 +214,36 @@ struct CustomAccentPicker: View {
                 }
             }
         }
+        .alert("Personal Voice Not Available", isPresented: $showPersonalVoiceAlert) {
+            Button("Open Settings", action: {
+                if #available(iOS 17, *) {
+                    if let personalVoiceUrl = URL(string: "App-Prefs:root=Accessibility&path=PERSONAL_VOICE"),
+                       UIApplication.shared.canOpenURL(personalVoiceUrl) {
+                        UIApplication.shared.open(personalVoiceUrl)
+                    } else if let accessibilityUrl = URL(string: "App-Prefs:root=Accessibility"),
+                              UIApplication.shared.canOpenURL(accessibilityUrl) {
+                        UIApplication.shared.open(accessibilityUrl)
+                    } else if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(settingsUrl)
+                    }
+                } else {
+                    if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(settingsUrl)
+                    }
+                }
+            })
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("To use Personal Voice, go to Settings > Accessibility > Personal Voice and set up your voice.")
+        }
+        .onAppear {
+            previousAccent = selectedAccent
+        }
+        .onChange(of: selectedAccent) { _, newValue in
+            if newValue != .personal {
+                previousAccent = newValue
+            }
+        }
     }
     
     private func handleAccentSelection(_ accent: SpeechAccent) {
@@ -225,6 +257,9 @@ struct CustomAccentPicker: View {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         selectedAccent = accent
                     }
+                } else {
+                    selectedAccent = previousAccent
+                    showPersonalVoiceAlert = true
                 }
             }
         } else {
@@ -259,10 +294,6 @@ struct AccentButton: View {
         if accent == .personal {
             if personalVoiceManager.isRequesting {
                 return "Requesting..."
-            } else if !personalVoiceManager.isAuthorized {
-                return "Tap to Enable"
-            } else if personalVoiceManager.personalVoices.isEmpty {
-                return "Not Available"
             } else {
                 return "Personal Voice"
             }
@@ -271,7 +302,7 @@ struct AccentButton: View {
     }
     
     private var isDisabled: Bool {
-        accent == .personal && personalVoiceManager.personalVoices.isEmpty && personalVoiceManager.isAuthorized
+        accent == .personal && personalVoiceManager.isRequesting
     }
     
     var body: some View {
@@ -283,6 +314,7 @@ struct AccentButton: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(isSelected ? .white : (isDisabled ? .gray.opacity(0.5) : .gray))
                     .multilineTextAlignment(.center)
+                    .frame(height: 32)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
