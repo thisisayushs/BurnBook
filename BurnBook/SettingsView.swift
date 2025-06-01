@@ -652,3 +652,4 @@ struct SettingsView: View {
 #Preview {
     SettingsView(settings: .constant(RoastSettings()))
 }
+
