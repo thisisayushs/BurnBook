@@ -266,3 +266,4 @@ private class SpeechDelegate: NSObject, AVSpeechSynthesizerDelegate {
 #Preview {
     CollectionView(roastCollection: RoastCollection(), settings: RoastSettings())
 }
+
