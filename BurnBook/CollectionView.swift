@@ -114,6 +114,7 @@ struct RoastCard: View {
     @State private var speechSynthesizer = AVSpeechSynthesizer()
     @State private var isSpeaking = false
     @State private var speechDelegate: SpeechDelegate?     // keep delegate alive
+    @StateObject private var personalVoiceManager = PersonalVoiceManager()
     
     private var gradientColors: LinearGradient {
         LinearGradient(colors: [.orange, .red],
@@ -135,6 +136,41 @@ struct RoastCard: View {
         renderer.isOpaque = true
         
         return renderer.uiImage ?? UIImage()
+    }
+    
+    private func speakRoast() {
+        if isSpeaking {
+            speechSynthesizer.stopSpeaking(at: .immediate)
+            return
+        }
+        
+        let utterance = AVSpeechUtterance(string: roast.roastText)
+        
+        if settings.speechAccent == .personal {
+            if let personalVoice = personalVoiceManager.getPersonalVoice() {
+                utterance.voice = personalVoice
+            } else {
+                utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+            }
+        } else {
+            if let accentVoice = AVSpeechSynthesisVoice(language: settings.speechAccent.voiceLanguage) {
+                utterance.voice = accentVoice
+            } else {
+                utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+            }
+        }
+        
+        // Speed 0‥1  →  legal min‥max
+        let minRate = AVSpeechUtteranceMinimumSpeechRate
+        let maxRate = AVSpeechUtteranceMaximumSpeechRate
+        utterance.rate = minRate + (maxRate - minRate) * Float(settings.speechSpeed)
+        
+        // Pitch
+        utterance.pitchMultiplier = Float(settings.speechPitch)
+        
+        utterance.volume = 0.8
+        speechSynthesizer.speak(utterance)
+        isSpeaking = true
     }
     
     var body: some View {
@@ -202,36 +238,12 @@ struct RoastCard: View {
             // keep delegate alive so weak ref doesn’t nil-out
             speechDelegate = SpeechDelegate(isSpeaking: $isSpeaking)
             speechSynthesizer.delegate = speechDelegate
+            if settings.speechAccent == .personal {
+                Task {
+                    await personalVoiceManager.requestPersonalVoiceAccess()
+                }
+            }
         }
-    }
-    
-    // MARK: - Speech helper
-    private func speakRoast() {
-        if isSpeaking {
-            speechSynthesizer.stopSpeaking(at: .immediate)
-            return
-        }
-        
-        let utterance = AVSpeechUtterance(string: roast.roastText)
-        
-        // Accent (fallback to US)
-        if let accentVoice = AVSpeechSynthesisVoice(language: settings.speechAccent.voiceLanguage) {
-            utterance.voice = accentVoice
-        } else {
-            utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
-        }
-        
-        // Speed 0‥1  →  legal min‥max
-        let minRate = AVSpeechUtteranceMinimumSpeechRate
-        let maxRate = AVSpeechUtteranceMaximumSpeechRate
-        utterance.rate = minRate + (maxRate - minRate) * Float(settings.speechSpeed)
-        
-        // Pitch
-        utterance.pitchMultiplier = Float(settings.speechPitch)
-        
-        utterance.volume = 0.8
-        speechSynthesizer.speak(utterance)
-        isSpeaking = true
     }
 }
 

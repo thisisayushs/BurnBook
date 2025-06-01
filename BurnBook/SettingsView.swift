@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreHaptics
+import AVFoundation
 
 struct CustomIntensitySlider: View {
     @Binding var value: Double
@@ -177,40 +178,61 @@ struct CustomToggle: View {
 
 struct CustomAccentPicker: View {
     @Binding var selectedAccent: SpeechAccent
+    @StateObject private var personalVoiceManager = PersonalVoiceManager()
     
     var body: some View {
         VStack(spacing: 15) {
             HStack {
                 ForEach(SpeechAccent.allCases.prefix(3)) { accent in
-                    AccentButton(accent: accent, isSelected: selectedAccent == accent) {
-                        let impact = UIImpactFeedbackGenerator(style: .light)
-                        impact.impactOccurred()
-                        
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            selectedAccent = accent
-                        }
+                    AccentButton(
+                        accent: accent,
+                        isSelected: selectedAccent == accent,
+                        personalVoiceManager: personalVoiceManager
+                    ) {
+                        handleAccentSelection(accent)
                     }
                 }
             }
             
             HStack {
-                ForEach(SpeechAccent.allCases.suffix(2)) { accent in
-                    AccentButton(accent: accent, isSelected: selectedAccent == accent) {
-                        let impact = UIImpactFeedbackGenerator(style: .light)
-                        impact.impactOccurred()
-                        
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            selectedAccent = accent
-                        }
+                ForEach(SpeechAccent.allCases.suffix(3)) { accent in
+                    AccentButton(
+                        accent: accent,
+                        isSelected: selectedAccent == accent,
+                        personalVoiceManager: personalVoiceManager
+                    ) {
+                        handleAccentSelection(accent)
                     }
                     if accent != SpeechAccent.allCases.last {
                         Spacer()
                     }
                 }
-                if SpeechAccent.allCases.suffix(2).count == 1 {
-                    Spacer()
+                if SpeechAccent.allCases.suffix(3).count < 3 {
                     Spacer()
                 }
+            }
+        }
+    }
+    
+    private func handleAccentSelection(_ accent: SpeechAccent) {
+        if accent == .personal && !personalVoiceManager.isAuthorized {
+            Task {
+                await personalVoiceManager.requestPersonalVoiceAccess()
+                if personalVoiceManager.isAuthorized {
+                    let impact = UIImpactFeedbackGenerator(style: .light)
+                    impact.impactOccurred()
+                    
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        selectedAccent = accent
+                    }
+                }
+            }
+        } else {
+            let impact = UIImpactFeedbackGenerator(style: .light)
+            impact.impactOccurred()
+            
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                selectedAccent = accent
             }
         }
     }
@@ -219,6 +241,7 @@ struct CustomAccentPicker: View {
 struct AccentButton: View {
     let accent: SpeechAccent
     let isSelected: Bool
+    let personalVoiceManager: PersonalVoiceManager
     let action: () -> Void
     
     private var flag: String {
@@ -228,7 +251,27 @@ struct AccentButton: View {
         case .australian: return "🇦🇺"
         case .irish: return "🇮🇪"
         case .southAfrican: return "🇿🇦"
+        case .personal: return "👤"
         }
+    }
+    
+    private var displayText: String {
+        if accent == .personal {
+            if personalVoiceManager.isRequesting {
+                return "Requesting..."
+            } else if !personalVoiceManager.isAuthorized {
+                return "Tap to Enable"
+            } else if personalVoiceManager.personalVoices.isEmpty {
+                return "Not Available"
+            } else {
+                return "Personal Voice"
+            }
+        }
+        return accent.rawValue
+    }
+    
+    private var isDisabled: Bool {
+        accent == .personal && personalVoiceManager.personalVoices.isEmpty && personalVoiceManager.isAuthorized
     }
     
     var body: some View {
@@ -236,9 +279,10 @@ struct AccentButton: View {
             VStack(spacing: 8) {
                 Text(flag)
                     .font(.title2)
-                Text(accent.rawValue)
+                Text(displayText)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(isSelected ? .white : .gray)
+                    .foregroundColor(isSelected ? .white : (isDisabled ? .gray.opacity(0.5) : .gray))
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
@@ -246,13 +290,14 @@ struct AccentButton: View {
                 RoundedRectangle(cornerRadius: 15)
                     .fill(isSelected ?
                           LinearGradient(colors: [.orange, .red], startPoint: .leading, endPoint: .trailing) :
-                          LinearGradient(colors: [Color.gray.opacity(0.1)], startPoint: .leading, endPoint: .trailing)
+                          LinearGradient(colors: [isDisabled ? Color.gray.opacity(0.05) : Color.gray.opacity(0.1)], startPoint: .leading, endPoint: .trailing)
                     )
             )
             .shadow(color: .black.opacity(isSelected ? 0.2 : 0.05), radius: isSelected ? 8 : 3, y: isSelected ? 4 : 1)
             .scaleEffect(isSelected ? 1.05 : 1.0)
         }
         .buttonStyle(PlainButtonStyle())
+        .disabled(isDisabled)
     }
 }
 

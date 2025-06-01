@@ -79,13 +79,14 @@ struct ResultView: View {
     let settings: RoastSettings
     
     @State private var currentRoast: String = "Roasting..."
-    @State private var shareItem: ShareImage?          // drives the sheet
+    @State private var shareItem: ShareImage?
     @State private var isBookmarked = false
     @State private var hapticEngine: CHHapticEngine?
     @State private var lastOutputLength = 0
     @State private var speechSynthesizer = AVSpeechSynthesizer()
     @State private var isSpeaking = false
     @State private var speechDelegate: SpeechDelegate?
+    @StateObject private var personalVoiceManager = PersonalVoiceManager()
 
     private func generateShareImage() -> UIImage {
         let shareCard = ShareCard(roastText: currentRoast, titleText: nameToRoast, forcedColorScheme: appColorScheme)
@@ -129,22 +130,26 @@ struct ResultView: View {
             isSpeaking = false
         } else {
             let utterance = AVSpeechUtterance(string: currentRoast)
-            // Accent – fall back to en-US if the requested voice isn’t present
-            if let accentVoice = AVSpeechSynthesisVoice(language: settings.speechAccent.voiceLanguage) {
-                utterance.voice = accentVoice
+            
+            if settings.speechAccent == .personal {
+                if let personalVoice = personalVoiceManager.getPersonalVoice() {
+                    utterance.voice = personalVoice
+                } else {
+                    utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+                }
             } else {
-                utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+                if let accentVoice = AVSpeechSynthesisVoice(language: settings.speechAccent.voiceLanguage) {
+                    utterance.voice = accentVoice
+                } else {
+                    utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+                }
             }
             
-            // Rate – map 0‥1 slider-percent onto the legal min‥max range
-            let minRate = AVSpeechUtteranceMinimumSpeechRate   // ≈ 0.0
-            let maxRate = AVSpeechUtteranceMaximumSpeechRate   // ≈ 1.0
+            let minRate = AVSpeechUtteranceMinimumSpeechRate
+            let maxRate = AVSpeechUtteranceMaximumSpeechRate
             utterance.rate = minRate + (maxRate - minRate) * Float(settings.speechSpeed)
             
-            // Pitch (0.5‥2.0) comes straight from settings
             utterance.pitchMultiplier = Float(settings.speechPitch)
-            
-            // Volume stays constant
             utterance.volume = 0.8
             
             speechSynthesizer.speak(utterance)
@@ -161,7 +166,6 @@ struct ResultView: View {
             impactFeedback.impactOccurred()
         }
         else if !isBookmarked {
-            // Find and remove the roast from collection
             if let roastToRemove = roastCollection.savedRoasts.first(where: {
                 $0.nameToRoast == nameToRoast && $0.roastText == currentRoast
             }) {
@@ -246,7 +250,6 @@ struct ResultView: View {
                             .animation(.easeInOut, value: currentRoast)
                             .animation(.easeInOut, value: evaluator.running)
                         
-                        // Speech button at bottom of card
                         Button(action: speakRoast) {
                             Image(systemName: isSpeaking ? "speaker.slash.fill" : "speaker.wave.2.fill")
                                 .font(.system(size: 20))
@@ -270,25 +273,20 @@ struct ResultView: View {
                 }
                 VStack {
                     Button(action: {
-                        // 1. Render UIImage
                         let rendered = generateShareImage()
                         
-                        // 2. Encode as PNG
                         guard let data = rendered.pngData() else { return }
                         
-                        // 3. Build a nice filename: "<Name> Roast.png"
                         let safeName = nameToRoast
-                            .replacingOccurrences(of: "/", with: "-")   // avoid illegal chars
+                            .replacingOccurrences(of: "/", with: "-")
                             .replacingOccurrences(of: ":", with: "-")
                             .trimmingCharacters(in: .whitespacesAndNewlines)
                         let fileName = "\(safeName) Roast.png"
                         
-                        // 4. Write to a temp file
                         let url = FileManager.default.temporaryDirectory
                             .appendingPathComponent(fileName)
                         try? data.write(to: url, options: .atomic)
                         
-                        // 5. Present sheet
                         shareItem = ShareImage(url: url)
                     }) {
                         Text("Share")
@@ -333,6 +331,9 @@ struct ResultView: View {
         .task {
             if currentRoast == "Roasting..." {
                 await evaluator.generate(prompt: nameToRoast, systemPrompt: systemPromptForRoast)
+            }
+            if settings.speechAccent == .personal {
+                await personalVoiceManager.requestPersonalVoiceAccess()
             }
         }
         .onAppear {
@@ -383,7 +384,6 @@ struct ShareSheet: UIViewControllerRepresentable {
         var shareItems: [Any] = []
         for item in items {
             if let image = item as? UIImage {
-                // Convert UIImage to PNG data for better sharing compatibility
                 if let imageData = image.pngData() {
                     shareItems.append(imageData)
                 } else {
