@@ -64,6 +64,55 @@ class PersonalVoiceManager: ObservableObject {
     }
 }
 
+@MainActor
+class RoastSettingsManager: ObservableObject {
+    @Published var settings: RoastSettings {
+        didSet {
+            saveSettings()
+        }
+    }
+    
+    private let userDefaults = UserDefaults.standard
+    
+    init() {
+        self.settings = Self.loadSettings()
+    }
+    
+    private static func loadSettings() -> RoastSettings {
+        let userDefaults = UserDefaults.standard
+        
+        let intensityRaw = userDefaults.string(forKey: "roast_intensity") ?? RoastIntensity.homicidal.rawValue
+        let intensity = RoastIntensity(rawValue: intensityRaw) ?? .homicidal
+        
+        let allowsPolitics = userDefaults.bool(forKey: "allows_politics")
+        let allowsProfanity = userDefaults.bool(forKey: "allows_profanity")
+        
+        let speechAccentRaw = userDefaults.string(forKey: "speech_accent") ?? SpeechAccent.american.rawValue
+        let speechAccent = SpeechAccent(rawValue: speechAccentRaw) ?? .american
+        
+        let speechSpeed = userDefaults.object(forKey: "speech_speed") as? Double ?? 0.5
+        let speechPitch = userDefaults.object(forKey: "speech_pitch") as? Double ?? 1.0
+        
+        return RoastSettings(
+            intensity: intensity,
+            allowsPolitics: allowsPolitics,
+            allowsProfanity: allowsProfanity,
+            speechAccent: speechAccent,
+            speechSpeed: speechSpeed,
+            speechPitch: speechPitch
+        )
+    }
+    
+    private func saveSettings() {
+        userDefaults.set(settings.intensity.rawValue, forKey: "roast_intensity")
+        userDefaults.set(settings.allowsPolitics, forKey: "allows_politics")
+        userDefaults.set(settings.allowsProfanity, forKey: "allows_profanity")
+        userDefaults.set(settings.speechAccent.rawValue, forKey: "speech_accent")
+        userDefaults.set(settings.speechSpeed, forKey: "speech_speed")
+        userDefaults.set(settings.speechPitch, forKey: "speech_pitch")
+    }
+}
+
 struct RoastSettings {
     var intensity: RoastIntensity = .homicidal
     var allowsPolitics: Bool = false

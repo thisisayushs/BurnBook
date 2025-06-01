@@ -464,16 +464,16 @@ struct CustomSpeedSlider: View {
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding var settings: RoastSettings
+    @ObservedObject var settingsManager: RoastSettingsManager
     @State private var intensitySliderValue: Double
     @State private var speechSpeedSliderValue: Double
     @State private var speechPitchSliderValue: Double
     
-    init(settings: Binding<RoastSettings>) {
-        self._settings = settings
-        self._intensitySliderValue = State(initialValue: settings.wrappedValue.intensity.sliderValue)
-        self._speechSpeedSliderValue = State(initialValue: settings.wrappedValue.speechSpeed)
-        self._speechPitchSliderValue = State(initialValue: settings.wrappedValue.speechPitch)
+    init(settingsManager: RoastSettingsManager) {
+        self.settingsManager = settingsManager
+        self._intensitySliderValue = State(initialValue: settingsManager.settings.intensity.sliderValue)
+        self._speechSpeedSliderValue = State(initialValue: settingsManager.settings.speechSpeed)
+        self._speechPitchSliderValue = State(initialValue: settingsManager.settings.speechPitch)
     }
     
     private var gradientColors: LinearGradient {
@@ -512,10 +512,10 @@ struct SettingsView: View {
                                     .foregroundStyle(gradientColors)
                                 
                                 CustomIntensitySlider(value: $intensitySliderValue) { newValue in
-                                    settings.intensity = RoastIntensity.from(sliderValue: newValue)
+                                    settingsManager.settings.intensity = RoastIntensity.from(sliderValue: newValue)
                                 }
                                 
-                                Text(settings.intensity.rawValue)
+                                Text(settingsManager.settings.intensity.rawValue)
                                     .font(.system(size: 18, weight: .bold, design: .rounded))
                                     .foregroundStyle(gradientColors)
                                     .padding(.horizontal, 20)
@@ -554,7 +554,7 @@ struct SettingsView: View {
                                 Spacer(minLength: 10)
                                 
                                 CustomToggle(
-                                    isOn: $settings.allowsPolitics,
+                                    isOn: $settingsManager.settings.allowsPolitics,
                                     icon: "checkmark",
                                     activeColor: gradientColors
                                 )
@@ -585,7 +585,7 @@ struct SettingsView: View {
                                 Spacer(minLength: 10)
                                 
                                 CustomToggle(
-                                    isOn: $settings.allowsProfanity,
+                                    isOn: $settingsManager.settings.allowsProfanity,
                                     icon: "flame",
                                     activeColor: gradientColors
                                 )
@@ -605,14 +605,14 @@ struct SettingsView: View {
                                     .font(.system(size: 22, weight: .bold, design: .rounded))
                                     .foregroundStyle(gradientColors)
                                 
-                                CustomAccentPicker(selectedAccent: $settings.speechAccent)
+                                CustomAccentPicker(selectedAccent: $settingsManager.settings.speechAccent)
                                 
                                 CustomSpeedSlider(value: $speechSpeedSliderValue, range: 0.1...1.0, step: 0.1, emoji: ("🐢", "🐇"), onChange: { newValue in
-                                    settings.speechSpeed = newValue
+                                    settingsManager.settings.speechSpeed = newValue
                                 })
                                 
                                 CustomSpeedSlider(value: $speechPitchSliderValue, range: 0.5...2.0, step: 0.1, emoji: ("🔽", "🔼"), onChange: { newValue in
-                                    settings.speechPitch = newValue
+                                    settingsManager.settings.speechPitch = newValue
                                 })
                             }
                             .padding(.horizontal, 30)
@@ -628,7 +628,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .navigationBarBackButtonHidden(true)      // hide default arrow
+        .navigationBarBackButtonHidden(true)
         .enableEdgeSwipeBack()
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -651,5 +651,5 @@ struct SettingsView: View {
 }
 
 #Preview {
-    SettingsView(settings: .constant(RoastSettings()))
+    SettingsView(settingsManager: RoastSettingsManager())
 }

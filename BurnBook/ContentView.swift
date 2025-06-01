@@ -108,7 +108,7 @@ struct ContentView: View {
     @State private var isModelReady = false
     @State private var loadingMessage = "Warming up the Burns..."
     @State private var selectedCategory: RoastCategory = .auto
-    @State private var roastSettings = RoastSettings()
+    @StateObject private var settingsManager = RoastSettingsManager()
     @State private var showSettings = false
     @StateObject private var roastCollection = RoastCollection()
     @State private var showCollection = false
@@ -309,7 +309,7 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 10) {
-                        NavigationLink(destination: CollectionView(roastCollection: roastCollection, settings: roastSettings)) {
+                        NavigationLink(destination: CollectionView(roastCollection: roastCollection, settings: settingsManager.settings)) {
                             Image(systemName: "bookmark.circle.fill")
                                 .font(.system(size: 20))
                                 .foregroundStyle(
@@ -323,7 +323,7 @@ struct ContentView: View {
                                 .shadow(color: .black.opacity(0.1), radius: 5, y: 2)
                         }
                         
-                        NavigationLink(destination: SettingsView(settings: $roastSettings)) {
+                        NavigationLink(destination: SettingsView(settingsManager: settingsManager)) {
                             Image(systemName: "gearshape.fill")
                                 .font(.system(size: 18))
                                 .foregroundStyle(
@@ -341,8 +341,8 @@ struct ContentView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(isPresented: $navigateToResult) {
-                let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text, settings: roastSettings)
-                ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt, roastCollection: roastCollection, settings: roastSettings)
+                let systemPrompt = SystemPromptFactory.getPrompt(for: selectedCategory, itemName: text, settings: settingsManager.settings)
+                ResultView(nameToRoast: text, evaluator: evaluator, systemPromptForRoast: systemPrompt, roastCollection: roastCollection, settings: settingsManager.settings)
                     .navigationBarBackButtonHidden()
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
