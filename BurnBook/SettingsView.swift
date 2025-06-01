@@ -318,6 +318,7 @@ struct AccentButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
+            .padding(.horizontal, 8)
             .background(
                 RoundedRectangle(cornerRadius: 15)
                     .fill(isSelected ?

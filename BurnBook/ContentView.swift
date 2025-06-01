@@ -247,10 +247,24 @@ struct ContentView: View {
                             .fontWeight(.semibold)
                             .multilineTextAlignment(.center)
                             .foregroundColor(.black)
+                            .accentColor(.gray)
+                            .tint(.gray)
                             .padding(.vertical, 16)
                             .padding(.horizontal, 24)
                             .background(Color.white)
                             .clipShape(Capsule())
+                            .overlay(
+                                Group {
+                                    if text.isEmpty {
+                                        Text(wittyPlaceholder)
+                                            .font(.title3)
+                                            .fontDesign(.rounded)
+                                            .fontWeight(.semibold)
+                                            .foregroundColor(.gray.opacity(0.7))
+                                            .allowsHitTesting(false)
+                                    }
+                                }
+                            )
                             .overlay(
                                 Capsule()
                                     .trim(from: 0, to: Double(45 - text.count) / 45.0)
