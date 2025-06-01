@@ -2,7 +2,7 @@
 //  CollectionView.swift
 //  BurnBook
 //
-//  Created by Ayush Kumar Singh on 13/03/25.
+//  Created by Ayush Kumar Singh on 3/13/25.
 //
 
 import SwiftUI
@@ -104,7 +104,7 @@ struct CollectionView: View {
 // MARK: - Safe wrapper for sharing
 private struct ShareImage: Identifiable {
     let id  = UUID()
-    let url: URL          // share by file-URL so filename is preserved
+    let url: URL
 }
 
 struct RoastCard: View {
@@ -163,12 +163,12 @@ struct RoastCard: View {
             }
         }
         
-        // Speed 0‥1  →  legal min‥max
+        
         let minRate = AVSpeechUtteranceMinimumSpeechRate
         let maxRate = AVSpeechUtteranceMaximumSpeechRate
         utterance.rate = minRate + (maxRate - minRate) * Float(settings.speechSpeed)
         
-        // Pitch
+        
         utterance.pitchMultiplier = Float(settings.speechPitch)
         
         utterance.volume = 0.8
@@ -198,12 +198,12 @@ struct RoastCard: View {
                 .scaleEffect(isSpeaking ? 1.1 : 1.0)
                 .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSpeaking)
                 
-                // Existing share button (rewritten to use `ShareImage`)
+                
                 Button(action: {
                     let rendered = generateShareImage()
                     guard let data = rendered.pngData() else { return }
                     
-                    // create a safe filename
+                    
                     let safeName = roast.nameToRoast
                         .replacingOccurrences(of: "/", with: "-")
                         .replacingOccurrences(of: ":", with: "-")
@@ -214,7 +214,7 @@ struct RoastCard: View {
                         .appendingPathComponent(fileName)
                     try? data.write(to: url, options: .atomic)
                     
-                    // trigger sheet
+                    
                     shareItem = ShareImage(url: url)
                 }) {
                     Image(systemName: "square.and.arrow.up.circle.fill")
@@ -222,7 +222,7 @@ struct RoastCard: View {
                         .foregroundStyle(gradientColors)
                 }
                 
-                // Existing delete button
+                
                 Button(action: onDelete) {
                     Image(systemName: "trash.circle.fill")
                         .font(.system(size: 24))
@@ -244,12 +244,12 @@ struct RoastCard: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-        // NEW: item-based sheet avoids first-launch blank view
+        
         .sheet(item: $shareItem) { item in
             ShareSheet(items: [item.url])
         }
         .onAppear {
-            // keep delegate alive so weak ref doesn’t nil-out
+            
             speechDelegate = SpeechDelegate(isSpeaking: $isSpeaking)
             speechSynthesizer.delegate = speechDelegate
             if settings.speechAccent == .personal {
@@ -261,7 +261,7 @@ struct RoastCard: View {
     }
 }
 
-// Keep talking-state in sync
+
 private class SpeechDelegate: NSObject, AVSpeechSynthesizerDelegate {
     @Binding var isSpeaking: Bool
     

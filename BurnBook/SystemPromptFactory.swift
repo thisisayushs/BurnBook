@@ -2,7 +2,7 @@
 //  SystemPromptFactory.swift
 //  BurnBook
 //
-//  Created by Alex Carmack on 5/19/25.
+//  Created by Ayush Kumar Singh on 5/19/25.
 //
 
 import Foundation
@@ -47,7 +47,5 @@ struct SystemPromptFactory {
         }
     }
     
-    // Add other system prompts here as needed, e.g.:
-    // static let shakespeareanInsult: String = "Thou art a most notable coward, an infinite and endless liar, an hourly promise-breaker, the owner of no one good quality."
 }
 

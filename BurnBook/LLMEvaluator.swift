@@ -30,7 +30,6 @@ class LLMEvaluator: ObservableObject {
         
         MLX.GPU.set(cacheLimit: 20 * 1024 * 1024)
         
-        // Model is shipped inside the app bundle, so we simply load it.
         modelContainer = try await LLMModelFactory.shared.loadContainer(
             configuration: modelConfig
         )

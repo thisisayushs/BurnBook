@@ -2,7 +2,7 @@
 //  ResultView.swift
 //  BurnBook
 //
-//  Created by Ayush Kumar Singh on 13/03/25.
+//  Created by Ayush Kumar Singh on 3/13/25.
 //
 
 import SwiftUI
@@ -12,7 +12,7 @@ import AVFoundation
 // MARK: - Safe wrapper for sharing
 private struct ShareImage: Identifiable {
     let id = UUID()
-    let url: URL            // now share by file-URL so filename is honoured
+    let url: URL
 }
 
 struct ShareCard: View {

@@ -1,3 +1,9 @@
+//
+//  SwipeBackModifier.swift
+//  BurnBook
+//
+//  Created by Ayush Kumar Singh on 5/31/25.
+//
 import SwiftUI
 
 /// Adds a custom “swipe from the very left edge” gesture that triggers `dismiss()`.
@@ -9,13 +15,11 @@ struct SwipeBackModifier: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            // Use simultaneousGesture so both our drag and the scroll view's drag
-            // can be recognised. We still check that the drag starts on the very
-            // left edge and is mostly horizontal before calling `dismiss()`.
+            
             .simultaneousGesture(
                 DragGesture()
                     .onEnded { value in
-                        // ❶ start near the left screen edge ❷ mostly horizontal ❸ dragged far enough
+                        
                         if value.startLocation.x < 30,
                            value.translation.width  > activationDistance,
                            abs(value.translation.height) < 50 {

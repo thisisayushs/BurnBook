@@ -1,3 +1,9 @@
+//
+//  ContentView.swift
+//  BurnBook
+//
+//  Created by Ayush Kumar Singh on 3/13/25.
+//
 import SwiftUI
 import Combine
 import CoreHaptics
@@ -349,7 +355,7 @@ struct ContentView: View {
         }
     }
     
-    // Existing onAppear and onChange remain the same
+    
 }
 
 #Preview {
