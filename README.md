@@ -16,6 +16,8 @@ Burn Book runs a light-weight large-language model (LLM) directly on your iPhone
 ## Under the hood
 
 - **SwiftUI** - Pure declarative goodness.
+
+- **Core Haptics** - Tactile feedback thrills every tap, slider move, and punchline.
  
 - **LLM Runtime** - MLX‑Swift wrapping the Metal‑accelerated MLX tensor library.
  
