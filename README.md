@@ -4,6 +4,10 @@ Burn Book runs a light-weight large-language model (LLM) directly on your iPhone
 
 ![App Screenshot](Screenshots/Poster.png)
 
+## Available on the App Store
+
+App Store Link - https://apps.apple.com/us/app/burn-book-one-tap-roast/id6746701571
+
 ## Features
 
 - 🎯 **Target anything** - Auto-detect, or tell the model to roast a *Person* or an *Object*.
