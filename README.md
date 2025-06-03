@@ -35,8 +35,6 @@ App Store Link - https://apps.apple.com/us/app/burn-book-one-tap-roast/id6746701
 2. Open the project in Xcode.
 3. Run the app on a simulator or connected device.
 
-*Coming soon to the App Store!*
-
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
